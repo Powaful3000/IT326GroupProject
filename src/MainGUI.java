@@ -107,20 +107,20 @@ public class MainGUI {
         loginButton.addActionListener(e -> {
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
-            
+
             if (!Validator.isValidString(username) || !Validator.isValidString(password)) {
                 JOptionPane.showMessageDialog(null, "Please enter both username and password");
                 return;
             }
-            
+
             System.out.println("Attempting authentication for user: " + username);
-            
+
             Student authenticatedStudent = dbHandler.authenticateStudent(username, password);
             if (authenticatedStudent != null) {
                 StudentHandler studentHandler = studentController.getStudentHandler();
                 studentHandler.setCurrentStudent(authenticatedStudent);
                 studentHandler.addStudent(authenticatedStudent);
-                
+
                 updateDashboardInfo(authenticatedStudent);
                 JOptionPane.showMessageDialog(null, "Login successful!");
                 System.out.println("Showing dashboard panel");
@@ -179,7 +179,7 @@ public class MainGUI {
 
         // Year Field
         JLabel yearLabel = new JLabel("Year:");
-        String[] years = {"Freshman", "Sophomore", "Junior", "Senior"};
+        String[] years = { "Freshman", "Sophomore", "Junior", "Senior" };
         JComboBox<String> yearComboBox = new JComboBox<>(years);
         gbc.gridy = 3;
         gbc.gridx = 0;
@@ -195,7 +195,8 @@ public class MainGUI {
             String year = (String) yearComboBox.getSelectedItem();
 
             if (!Validator.isValidString(username) || !Validator.isValidPassword(password)) {
-                JOptionPane.showMessageDialog(null, "Invalid username or password. Password must be at least 8 characters long and include at least one letter and one number.");
+                JOptionPane.showMessageDialog(null,
+                        "Invalid username or password. Password must be at least 8 characters long and include at least one letter and one number.");
                 return;
             }
 
@@ -259,23 +260,31 @@ public class MainGUI {
         // Create the group list model first
         DefaultListModel<String> groupListModel = new DefaultListModel<>();
         JList<String> groupList = new JList<>(groupListModel);
-        
+
         // Search/Filter Panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setBorder(BorderFactory.createTitledBorder("Search"));
-        
+
         JTextField searchField = new JTextField(20);
         searchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) { filterGroups(); }
-            public void removeUpdate(DocumentEvent e) { filterGroups(); }
-            public void insertUpdate(DocumentEvent e) { filterGroups(); }
+            public void changedUpdate(DocumentEvent e) {
+                filterGroups();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                filterGroups();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                filterGroups();
+            }
 
             private void filterGroups() {
                 String searchText = searchField.getText().toLowerCase();
                 groupListModel.clear();
                 studentController.getAllGroups().stream()
-                    .filter(group -> group.getName().toLowerCase().contains(searchText))
-                    .forEach(group -> groupListModel.addElement(group.getName()));
+                        .filter(group -> group.getName().toLowerCase().contains(searchText))
+                        .forEach(group -> groupListModel.addElement(group.getName()));
             }
         });
 
@@ -289,7 +298,7 @@ public class MainGUI {
         // Group List Panel
         JPanel listPanel = new JPanel(new BorderLayout());
         listPanel.setBorder(BorderFactory.createTitledBorder("Available Groups"));
-        
+
         JScrollPane scrollPane = new JScrollPane(groupList);
         scrollPane.setPreferredSize(new Dimension(300, 200));
         listPanel.add(scrollPane, BorderLayout.CENTER);
@@ -335,7 +344,7 @@ public class MainGUI {
                 JOptionPane.showMessageDialog(groupPanel, "Please log in first.");
                 return;
             }
-            
+
             String selectedGroup = groupList.getSelectedValue();
             if (selectedGroup != null) {
                 Group group = studentController.getGroupByName(selectedGroup);
@@ -343,7 +352,8 @@ public class MainGUI {
                     if (studentController.joinGroup(group)) {
                         JOptionPane.showMessageDialog(groupPanel, "Successfully joined group!");
                     } else {
-                        JOptionPane.showMessageDialog(groupPanel, "Failed to join group. You might already be a member.");
+                        JOptionPane.showMessageDialog(groupPanel,
+                                "Failed to join group. You might already be a member.");
                     }
                 }
             } else {
@@ -378,7 +388,7 @@ public class MainGUI {
         buttonPanel.add(backButton);
 
         gbc.gridy = 3;
-        gbc.weighty = 0.0;  // Reset weight for buttons
+        gbc.weighty = 0.0; // Reset weight for buttons
         gbc.fill = GridBagConstraints.HORIZONTAL;
         groupPanel.add(buttonPanel, gbc);
 
@@ -389,7 +399,7 @@ public class MainGUI {
         JPanel detailsPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        
+
         // Group Info Section
         JLabel titleLabel = new JLabel("Group: " + group.getName());
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -461,10 +471,10 @@ public class MainGUI {
         });
 
         deleteGroupBtn.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(null, 
-                "Are you sure you want to delete this group?", 
-                "Confirm Delete", 
-                JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(null,
+                    "Are you sure you want to delete this group?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 // Delete group logic
             }
@@ -501,7 +511,7 @@ public class MainGUI {
 
     private JPanel createNavigationPanel() {
         JPanel navPanel = new JPanel();
-        
+
         JButton profileBtn = new JButton("Profile");
         JButton groupsBtn = new JButton("Groups");
         JButton postsBtn = new JButton("Posts");
@@ -518,7 +528,7 @@ public class MainGUI {
 
     private JPanel createSearchPanel() {
         JPanel searchPanel = new JPanel();
-        
+
         // Search by tags
         // Search for groups
         // Search for other students
@@ -544,15 +554,15 @@ public class MainGUI {
         // Student Info Panel
         JPanel infoPanel = new JPanel(new GridLayout(3, 2, 5, 5));
         infoPanel.setBorder(BorderFactory.createTitledBorder("Student Information"));
-        
+
         infoPanel.add(new JLabel("ID:"));
         JLabel idLabel = new JLabel("N/A");
         infoPanel.add(idLabel);
-        
+
         infoPanel.add(new JLabel("Name:"));
         JLabel nameLabel = new JLabel("N/A");
         infoPanel.add(nameLabel);
-        
+
         infoPanel.add(new JLabel("Year:"));
         JLabel yearLabel = new JLabel("N/A");
         infoPanel.add(yearLabel);
@@ -566,28 +576,28 @@ public class MainGUI {
 
         JButton groupsButton = new JButton("My Groups");
         groupsButton.addActionListener(e -> cardLayout.show(mainPanel, "Groups"));
-        
+
         JButton postsButton = new JButton("My Posts");
         postsButton.addActionListener(e -> cardLayout.show(mainPanel, "Posts"));
-        
+
         JButton tagsButton = new JButton("Manage Tags");
         tagsButton.addActionListener(e -> cardLayout.show(mainPanel, "Tags"));
-        
+
         JButton searchButton = new JButton("Search");
         searchButton.addActionListener(e -> cardLayout.show(mainPanel, "Search"));
-        
+
         JButton profileButton = new JButton("Edit Profile");
         profileButton.addActionListener(e -> {
             // TODO: Implement edit profile functionality
             JOptionPane.showMessageDialog(null, "Edit Profile functionality coming soon!");
         });
-        
+
         JButton logoutButton = new JButton("Logout");
         logoutButton.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(null, 
-                "Are you sure you want to logout?", 
-                "Confirm Logout", 
-                JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(null,
+                    "Are you sure you want to logout?",
+                    "Confirm Logout",
+                    JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 cardLayout.show(mainPanel, "Welcome");
             }
@@ -612,8 +622,8 @@ public class MainGUI {
             if (comp instanceof JPanel && "Dashboard".equals(comp.getName())) {
                 JPanel dashboardPanel = (JPanel) comp;
                 for (Component dashComp : dashboardPanel.getComponents()) {
-                    if (dashComp instanceof JPanel && 
-                        dashComp.getParent().getLayout() instanceof GridBagLayout) {
+                    if (dashComp instanceof JPanel &&
+                            dashComp.getParent().getLayout() instanceof GridBagLayout) {
                         JPanel infoPanel = (JPanel) dashComp;
                         Component[] labels = infoPanel.getComponents();
                         for (int i = 0; i < labels.length; i++) {
@@ -651,7 +661,7 @@ public class MainGUI {
         // Initialize handlers
         StudentHandler studentHandler = new StudentHandler();
         GroupHandler groupHandler = new GroupHandler(dbHandler);
-        
+
         // Initialize controller
         final StudentController studentController = new StudentController(studentHandler, groupHandler);
 
