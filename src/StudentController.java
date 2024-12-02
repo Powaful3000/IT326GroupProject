@@ -136,11 +136,11 @@ public class StudentController {
 
         // Get all posts from the student handler
         List<Post> allPosts = studentHandler.getAllPosts();
-        
+
         // Filter posts that belong to the specified group
         return allPosts.stream()
-            .filter(post -> post.isInGroup(group))
-            .collect(Collectors.toList());
+                .filter(post -> post.isInGroup(group))
+                .collect(Collectors.toList());
     }
 
     public List<Group> getAllGroups() {
@@ -153,9 +153,9 @@ public class StudentController {
 
     public Group getGroupByName(String name) {
         return groupHandler.getAllGroups().stream()
-            .filter(group -> group.getName().equals(name))
-            .findFirst()
-            .orElse(null);
+                .filter(group -> group.getName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
     public boolean joinGroup(Group group) {
@@ -163,16 +163,16 @@ public class StudentController {
             System.err.println("Cannot join null group");
             return false;
         }
-        
+
         Student currentStudent = studentHandler.getCurrentStudent();
         if (currentStudent == null) {
             System.err.println("No student currently logged in");
             return false;
         }
-        
+
         System.out.println("Attempting to join group: " + group.getName());
         System.out.println("Current student: " + currentStudent.getName());
-        
+
         return groupHandler.addMemberToGroup(group.getID(), currentStudent);
     }
 }

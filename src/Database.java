@@ -52,4 +52,21 @@ public abstract class Database {
 
     // Abstract method to prepare SQL statements
     public abstract PreparedStatement prepareStatement(String query) throws SQLException;
+
+    // Add abstract methods to match MySQLHandler implementations
+    public abstract boolean editPost(Post post);
+
+    public abstract boolean leaveGroup(Group group, Student student);
+
+    public abstract boolean containsTag(Tag tag);
+
+    public abstract void createPost(Post post);
+
+    public abstract boolean addTagToStudent(int studentId, int tagId);
+
+    public abstract boolean removeTagFromStudent(int studentId, int tagId);
+
+    public abstract boolean addPostToGroup(int postId, int groupId);
+
+    public abstract boolean updateMembershipEndDate(int studentId, int groupId, java.sql.Date endDate);
 }

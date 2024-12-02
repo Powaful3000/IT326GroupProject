@@ -36,8 +36,8 @@ public class GroupHandler {
 
     private Group getGroupById(int groupId) {
         return groups.stream()
-            .filter(group -> group.getID() == groupId)
-            .findFirst()
-            .orElse(null);
+                .filter(group -> group.getID() == groupId)
+                .findFirst()
+                .orElse(null);
     }
 }

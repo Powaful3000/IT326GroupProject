@@ -20,7 +20,8 @@ public class Validator {
         return true;
     }
 
-    // Validate if a year string is in a specific format (e.g., "Freshman", "Sophomore", "Junior", "Senior")
+    // Validate if a year string is in a specific format (e.g., "Freshman",
+    // "Sophomore", "Junior", "Senior")
     public static boolean isValidYear(String year) {
         String[] validYears = { "Freshman", "Sophomore", "Junior", "Senior" };
         for (String validYear : validYears) {
@@ -48,7 +49,8 @@ public class Validator {
         return true;
     }
 
-    // Validate password strength (minimum 8 characters, at least one letter and one number)
+    // Validate password strength (minimum 8 characters, at least one letter and one
+    // number)
     public static boolean isValidPassword(String password) {
         if (password == null || password.isEmpty()) {
             System.err.println("Invalid password: Password cannot be null or empty.");
@@ -58,7 +60,8 @@ public class Validator {
         // Password regex pattern
         String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$";
         if (!Pattern.matches(passwordRegex, password)) {
-            System.err.println("Invalid password: Password must be at least 8 characters long and include at least one letter and one number.");
+            System.err.println(
+                    "Invalid password: Password must be at least 8 characters long and include at least one letter and one number.");
             return false;
         }
         return true;

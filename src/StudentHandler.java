@@ -98,7 +98,8 @@ public class StudentHandler {
             System.out.println("No students found.");
         } else {
             for (Student student : students) {
-                System.out.println("ID: " + student.getID() + ", Name: " + student.getName() + ", Year: " + student.getYear());
+                System.out.println(
+                        "ID: " + student.getID() + ", Name: " + student.getName() + ", Year: " + student.getYear());
             }
         }
     }

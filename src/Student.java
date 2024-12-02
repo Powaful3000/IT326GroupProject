@@ -11,7 +11,8 @@ public class Student {
     private List<Post> userPosts;
 
     // Constructor
-    public Student(int userID, String userName, String userYear, List<Tag> userTags, List<Group> userGroups, List<Post> userPosts) {
+    public Student(int userID, String userName, String userYear, List<Tag> userTags, List<Group> userGroups,
+            List<Post> userPosts) {
         this.userID = userID;
         this.userName = userName;
         this.userYear = userYear;
