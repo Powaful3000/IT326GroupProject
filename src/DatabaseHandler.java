@@ -49,6 +49,12 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     }
 
     public boolean addGroup(Group group) {
+        System.out.println("\n====== DatabaseHandler Debug ======");
+        System.out.println("Forwarding addGroup call to MySQLHandler");
+        System.out.println("Group details:");
+        System.out.println("- ID: " + group.getID());
+        System.out.println("- Name: " + group.getName());
+        System.out.println("- Description: " + group.getDescription());
         return sqlHandler.addGroup(group);
     }
 
@@ -99,5 +105,55 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     @Override
     public boolean updateMembershipEndDate(int studentId, int groupId, java.sql.Date endDate) {
         return sqlHandler.updateMembershipEndDate(studentId, groupId, endDate);
+    }
+
+    @Override
+    public boolean sendFriendRequest(int fromUserId, int toUserId) {
+        return sqlHandler.sendFriendRequest(fromUserId, toUserId);
+    }
+
+    @Override
+    public boolean acceptFriendRequest(int requestId) {
+        return sqlHandler.acceptFriendRequest(requestId);
+    }
+
+    @Override
+    public boolean declineFriendRequest(int requestId) {
+        return sqlHandler.declineFriendRequest(requestId);
+    }
+
+    @Override
+    public boolean blockUser(int blockerId, int blockedId) {
+        return sqlHandler.blockUser(blockerId, blockedId);
+    }
+
+    @Override
+    public boolean bookmarkPost(int userId, int postId) {
+        return sqlHandler.bookmarkPost(userId, postId);
+    }
+
+    @Override
+    public boolean toggleAnonymousMode(int userId, boolean isAnonymous) {
+        return sqlHandler.toggleAnonymousMode(userId, isAnonymous);
+    }
+
+    @Override
+    public List<Student> getFriendRequests(int userId) {
+        return sqlHandler.getFriendRequests(userId);
+    }
+
+    @Override
+    public List<Student> getFriends(int userId) {
+        return sqlHandler.getFriends(userId);
+    }
+
+    @Override
+    public List<Student> getBlockedUsers(int userId) {
+        return sqlHandler.getBlockedUsers(userId);
+    }
+
+    @Override
+    public List<Post> getBookmarkedPosts(int userId) {
+        return sqlHandler.getBookmarkedPosts(userId);
     }
 }

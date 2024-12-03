@@ -1,19 +1,22 @@
 public class Tag {
 
     // Attributes
+    private int id;
     private String name;
     private String description;
 
     // Constructor
-    public Tag(String name, String description) {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Tag name cannot be null or empty.");
-        }
+    public Tag(int id, String name, String description) {
+        this.id = id;
         this.name = name;
         this.description = description;
     }
 
     // Getters
+    public int getID() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
@@ -23,10 +26,11 @@ public class Tag {
     }
 
     // Setters
+    public void setID(int id) {
+        this.id = id;
+    }
+
     public void setName(String name) {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Tag name cannot be null or empty.");
-        }
         this.name = name;
     }
 
@@ -44,17 +48,23 @@ public class Tag {
             return false; // Not the same class
         }
         Tag tag = (Tag) obj;
-        return name.equals(tag.name); // Tags are equal if their names are the same
+        return id == tag.id; // Tags are equal if their IDs are the same
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode(); // Generate hash based on tag name
+        return id; // Generate hash based on tag ID
     }
 
     // Method to print tag details
     public void printDetails() {
-        System.out.println("Tag Name: " + name);
+        System.out.println("Tag ID: " + id);
+        System.out.println("Name: " + name);
         System.out.println("Description: " + description);
+    }
+
+    @Override
+    public String toString() {
+        return name + (description != null && !description.isEmpty() ? " - " + description : "");
     }
 }

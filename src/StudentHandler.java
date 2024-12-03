@@ -122,4 +122,28 @@ public class StudentHandler {
     public void setCurrentStudent(Student student) {
         this.currentStudent = student;
     }
+
+    public Student getStudentByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        for (Student student : students) {
+            if (student.getName().equals(name)) {
+                return student;
+            }
+        }
+        return null;
+    }
+
+    public Student getStudentByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+        for (Student student : students) {
+            if (student.getUsername().equals(username)) {
+                return student;
+            }
+        }
+        return null;
+    }
 }

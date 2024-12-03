@@ -34,4 +34,24 @@ public interface DatabaseOperations {
     boolean addPostToGroup(int postId, int groupId);
 
     boolean updateMembershipEndDate(int studentId, int groupId, java.sql.Date endDate);
+
+    boolean sendFriendRequest(int fromUserId, int toUserId);
+
+    boolean acceptFriendRequest(int requestId);
+
+    boolean declineFriendRequest(int requestId);
+
+    List<Student> getFriendRequests(int userId);
+
+    List<Student> getFriends(int userId);
+
+    boolean blockUser(int blockerId, int blockedId);
+
+    List<Student> getBlockedUsers(int userId);
+
+    boolean bookmarkPost(int userId, int postId);
+
+    List<Post> getBookmarkedPosts(int userId);
+
+    boolean toggleAnonymousMode(int userId, boolean isAnonymous);
 }

@@ -148,7 +148,23 @@ public class StudentController {
     }
 
     public boolean createGroup(Group group) {
-        return groupHandler.addGroup(group);
+        System.out.println("\n====== StudentController createGroup Debug ======");
+        System.out.println("Validating input group:");
+        if (group == null) {
+            System.out.println("Error: Group is null");
+            return false;
+        }
+        
+        System.out.println("Group details:");
+        System.out.println("- ID: " + group.getID());
+        System.out.println("- Name: " + group.getName());
+        System.out.println("- Description: " + group.getDescription());
+        System.out.println("- Creation Date: " + group.getCreationDate());
+        
+        System.out.println("\nForwarding to groupHandler.addGroup()...");
+        boolean result = groupHandler.addGroup(group);
+        System.out.println("GroupHandler result: " + (result ? "success" : "failure"));
+        return result;
     }
 
     public Group getGroupByName(String name) {
