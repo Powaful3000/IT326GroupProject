@@ -10,8 +10,8 @@ public class Group {
     private String description;
     private Date creationDate;
     private List<Student> members;
-    private Map<Integer, Date> memberJoinDates;  // StudentID -> JoinDate
-    private Map<Integer, Date> memberEndDates;   // StudentID -> EndDate
+    private Map<Integer, Date> memberJoinDates; // StudentID -> JoinDate
+    private Map<Integer, Date> memberEndDates; // StudentID -> EndDate
 
     public Group(int id, String name, String description) {
         this.id = id;
@@ -131,13 +131,15 @@ public class Group {
 
     public boolean isMember(Student student) {
         return members.stream()
-            .anyMatch(member -> member.getID() == student.getID());
+                .anyMatch(member -> member.getID() == student.getID());
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
         Group other = (Group) obj;
         return id == other.id;
     }

@@ -22,10 +22,10 @@ public class PanelFactory {
     private final PanelManager panelManager;
     private final UIManager uiManager;
 
-    public PanelFactory(StudentController studentController, DatabaseHandler dbHandler, 
-                       StudentHandler studentHandler, DialogManager dialogManager,
-                       CardLayout cardLayout, JPanel mainPanel, PostHandler postHandler,
-                       TagHandler tagHandler) {
+    public PanelFactory(StudentController studentController, DatabaseHandler dbHandler,
+            StudentHandler studentHandler, DialogManager dialogManager,
+            CardLayout cardLayout, JPanel mainPanel, PostHandler postHandler,
+            TagHandler tagHandler) {
         this.studentController = studentController;
         this.dbHandler = dbHandler;
         this.studentHandler = studentHandler;
@@ -54,36 +54,37 @@ public class PanelFactory {
         groupManagementPanel.setName("Groups");
         dashboardPanel.setName("Dashboard");
         tagManagementPanel.setName("Tags");
-        
+
         // Add panels to panel manager only (PanelManager handles adding to mainPanel)
         panelManager.addPanel("Welcome", welcomePanel);
-        
+
         panelManager.addPanel("Login", loginPanel);
-        
+
         panelManager.addPanel("Create Account", accountPanel);
-        
+
         panelManager.addPanel("Dashboard", dashboardPanel);
-        
+
         panelManager.addPanel("Groups", groupManagementPanel);
-        
+
         panelManager.addPanel("Posts", postManagementPanel);
-        
+
         panelManager.addPanel("Tags", tagManagementPanel);
-        
+
         panelManager.addPanel("Search", searchPanel);
-        
+
         panelManager.addPanel("Profile", profilePanel);
-        
+
         // Set up refresh callbacks
         dialogManager.setRefreshCallback(() -> refreshTagLists(findPanel(mainPanel, "Tags")));
-        
+
         // Initial refresh of group lists
         refreshGroupLists(groupManagementPanel);
     }
 
     public JPanel findPanel(Container container, String name) {
-        if (container == null) return null;
-        
+        if (container == null)
+            return null;
+
         for (Component comp : container.getComponents()) {
             if (comp instanceof JPanel && name.equals(comp.getName())) {
                 return (JPanel) comp;
@@ -162,7 +163,7 @@ public class PanelFactory {
         JButton loginButton = new JButton("Login");
         ActionListener loginAction = e -> dialogManager.handleLoginAttempt(usernameField, passwordField, mainPanel);
         loginButton.addActionListener(loginAction);
-        
+
         // Add enter key listener to password field
         passwordField.addActionListener(loginAction);
 
@@ -335,12 +336,12 @@ public class PanelFactory {
         // Create Post Section
         JPanel createPostPanel = new JPanel(new BorderLayout());
         createPostPanel.setBorder(BorderFactory.createTitledBorder("Create New Post"));
-        
+
         JTextArea postContent = new JTextArea(4, 30);
         postContent.setLineWrap(true);
         postContent.setWrapStyleWord(true);
         JScrollPane postScrollPane = new JScrollPane(postContent);
-        
+
         JButton createPostBtn = new JButton("Create Post");
         createPostBtn.addActionListener(e -> {
             dialogManager.handleCreatePost(postContent, () -> refreshPostLists(postPanel));
@@ -357,7 +358,7 @@ public class PanelFactory {
         // My Posts Section
         JPanel myPostsPanel = new JPanel(new BorderLayout());
         myPostsPanel.setBorder(BorderFactory.createTitledBorder("My Posts"));
-        
+
         DefaultListModel<Post> myPostsModel = new DefaultListModel<>();
         JList<Post> myPostsList = new JList<>(myPostsModel);
         myPostsList.setCellRenderer(new PostListCellRenderer());
@@ -366,7 +367,7 @@ public class PanelFactory {
         JPanel myPostsButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton editPostBtn = new JButton("Edit");
         JButton deletePostBtn = new JButton("Delete");
-        
+
         editPostBtn.addActionListener(e -> {
             Post selectedPost = myPostsList.getSelectedValue();
             dialogManager.handleEditPostButtonClick(selectedPost, () -> refreshPostLists(postPanel));
@@ -449,13 +450,13 @@ public class PanelFactory {
     private class PostListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                    boolean isSelected, boolean cellHasFocus) {
+                boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (value instanceof Post) {
                 Post post = (Post) value;
                 setText(String.format("<html><b>%s</b><br/>%s</html>",
-                    post.getOwner().getName(),
-                    post.getContent()));
+                        post.getOwner().getName(),
+                        post.getContent()));
             }
             return this;
         }
@@ -466,10 +467,10 @@ public class PanelFactory {
         System.out.println("\n====== Finding Components Debug ======");
         System.out.println("Searching for title: " + title);
         System.out.println("Container type: " + container.getClass().getSimpleName());
-        
+
         for (Component comp : container.getComponents()) {
             System.out.println("Checking component: " + comp.getClass().getSimpleName());
-            
+
             if (comp instanceof JPanel) {
                 JPanel panel = (JPanel) comp;
                 Border border = panel.getBorder();
@@ -491,7 +492,7 @@ public class PanelFactory {
                         }
                     }
                 }
-                
+
                 // Recursively search in nested panels
                 if (panel.getComponentCount() > 0) {
                     System.out.println("Searching nested panel...");
@@ -500,11 +501,11 @@ public class PanelFactory {
             } else if (comp instanceof JSplitPane) {
                 System.out.println("Searching JSplitPane components...");
                 JSplitPane splitPane = (JSplitPane) comp;
-                components.addAll(findComponentsByTitle((Container)splitPane.getTopComponent(), title));
-                components.addAll(findComponentsByTitle((Container)splitPane.getBottomComponent(), title));
+                components.addAll(findComponentsByTitle((Container) splitPane.getTopComponent(), title));
+                components.addAll(findComponentsByTitle((Container) splitPane.getBottomComponent(), title));
             }
         }
-        
+
         System.out.println("Found " + components.size() + " matching components");
         return components;
     }
@@ -528,7 +529,7 @@ public class PanelFactory {
         // Create Tag Section
         JPanel createTagPanel = new JPanel(new GridBagLayout());
         createTagPanel.setBorder(BorderFactory.createTitledBorder("Create New Tag"));
-        
+
         GridBagConstraints createGbc = new GridBagConstraints();
         createGbc.insets = new Insets(5, 5, 5, 5);
         createGbc.fill = GridBagConstraints.HORIZONTAL;
@@ -680,15 +681,15 @@ public class PanelFactory {
         // Search by username section
         JPanel userSearchPanel = new JPanel(new BorderLayout());
         userSearchPanel.setBorder(BorderFactory.createTitledBorder("Search Users"));
-        
+
         JTextField userSearchField = new JTextField(20);
         JButton userSearchBtn = new JButton("Search");
-        
+
         JPanel userSearchInputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         userSearchInputPanel.add(new JLabel("Username: "));
         userSearchInputPanel.add(userSearchField);
         userSearchInputPanel.add(userSearchBtn);
-        
+
         DefaultListModel<Student> userResultsModel = new DefaultListModel<>();
         JList<Student> userResultsList = new JList<>(userResultsModel);
         JScrollPane userScrollPane = new JScrollPane(userResultsList);
@@ -716,20 +717,20 @@ public class PanelFactory {
         // Search by tag section
         JPanel tagSearchPanel = new JPanel(new BorderLayout());
         tagSearchPanel.setBorder(BorderFactory.createTitledBorder("Search by Tags"));
-        
+
         JComboBox<Tag> tagComboBox = new JComboBox<>();
         List<Tag> allTags = tagHandler.getAllTags();
         for (Tag tag : allTags) {
             tagComboBox.addItem(tag);
         }
-        
+
         JButton tagSearchBtn = new JButton("Search");
-        
+
         JPanel tagSearchInputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         tagSearchInputPanel.add(new JLabel("Tag: "));
         tagSearchInputPanel.add(tagComboBox);
         tagSearchInputPanel.add(tagSearchBtn);
-        
+
         DefaultListModel<Student> tagResultsModel = new DefaultListModel<>();
         JList<Student> tagResultsList = new JList<>(tagResultsModel);
         JScrollPane tagScrollPane = new JScrollPane(tagResultsList);
@@ -769,25 +770,24 @@ public class PanelFactory {
 
         // Create top panel for title and back button
         JPanel topPanel = new JPanel(new BorderLayout());
-        
+
         // Back button
         JButton backButton = new JButton("← Back");
         backButton.addActionListener(e -> uiManager.showPanel("Dashboard"));
         topPanel.add(backButton, BorderLayout.WEST);
-        
+
         // Title
         JLabel titleLabel = new JLabel("Group Management", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         topPanel.add(titleLabel, BorderLayout.CENTER);
-        
+
         groupPanel.add(topPanel, BorderLayout.NORTH);
 
         // Add keyboard listener for Escape
         groupPanel.registerKeyboardAction(
-            e -> uiManager.showPanel("Dashboard"),
-            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-            JComponent.WHEN_IN_FOCUSED_WINDOW
-        );
+                e -> uiManager.showPanel("Dashboard"),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         // Main content panel
         JPanel contentPanel = new JPanel(new GridBagLayout());
@@ -808,18 +808,26 @@ public class PanelFactory {
         }
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) { filterGroups(); }
-            public void removeUpdate(DocumentEvent e) { filterGroups(); }
-            public void insertUpdate(DocumentEvent e) { filterGroups(); }
+            public void changedUpdate(DocumentEvent e) {
+                filterGroups();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                filterGroups();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                filterGroups();
+            }
 
             private void filterGroups() {
                 String searchText = searchField.getText().toLowerCase().trim();
                 groupListModel.clear();
-                
+
                 List<Group> allGroups = studentController.getAllGroups();
                 for (Group group : allGroups) {
-                    if (group.getName().toLowerCase().contains(searchText) || 
-                        group.getDescription().toLowerCase().contains(searchText)) {
+                    if (group.getName().toLowerCase().contains(searchText) ||
+                            group.getDescription().toLowerCase().contains(searchText)) {
                         groupListModel.addElement(group.getName());
                     }
                 }
@@ -851,22 +859,22 @@ public class PanelFactory {
         // Group Management Buttons Panel
         JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 5, 5));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
+
         JButton joinGroupBtn = new JButton("Join Group");
         JButton leaveGroupBtn = new JButton("Leave Group");
         JButton createGroupBtn = new JButton("Create Group");
         JButton viewDetailsBtn = new JButton("View Details");
-        
+
         joinGroupBtn.addActionListener(e -> dialogManager.showJoinGroupDialog());
         leaveGroupBtn.addActionListener(e -> dialogManager.showLeaveGroupDialog());
         createGroupBtn.addActionListener(e -> dialogManager.showCreateGroupDialog());
         viewDetailsBtn.addActionListener(e -> dialogManager.showGroupDetailsDialog());
-        
+
         buttonPanel.add(joinGroupBtn);
         buttonPanel.add(leaveGroupBtn);
         buttonPanel.add(createGroupBtn);
         buttonPanel.add(viewDetailsBtn);
-        
+
         availableGroupsPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         // My Groups Panel
@@ -927,14 +935,14 @@ public class PanelFactory {
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
         JScrollPane descScroll = new JScrollPane(descArea);
-        
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
         contentPanel.add(descScroll, gbc);
 
         // Member list
-        String[] columnNames = {"Name", "Join Date", "Status"};
+        String[] columnNames = { "Name", "Join Date", "Status" };
         Object[][] data = new Object[group.getMembers().size()][3];
         int i = 0;
         for (Student member : group.getMembers()) {
@@ -945,7 +953,7 @@ public class PanelFactory {
         }
         JTable memberTable = new JTable(data, columnNames);
         JScrollPane tableScroll = new JScrollPane(memberTable);
-        
+
         gbc.gridy = 1;
         gbc.weighty = 1.0;
         contentPanel.add(tableScroll, gbc);
@@ -974,20 +982,20 @@ public class PanelFactory {
 
             List<Group> updatedGroups = studentController.getAllGroups();
             Student currentStudent = studentHandler.getCurrentStudent();
-            
+
             // Find and update both lists in the split pane
             for (Component comp : groupPanel.getComponents()) {
                 if (comp instanceof JSplitPane) {
                     JSplitPane splitPane = (JSplitPane) comp;
-                    
+
                     // Update Available Groups list
                     JPanel availablePanel = (JPanel) splitPane.getTopComponent();
                     updateListInPanel(availablePanel, updatedGroups, group -> true);
-                    
+
                     // Update My Groups list
                     JPanel myGroupsPanel = (JPanel) splitPane.getBottomComponent();
-                    updateListInPanel(myGroupsPanel, updatedGroups, 
-                        group -> currentStudent != null && group.isMember(currentStudent));
+                    updateListInPanel(myGroupsPanel, updatedGroups,
+                            group -> currentStudent != null && group.isMember(currentStudent));
                 }
             }
         } catch (Exception e) {
@@ -1006,8 +1014,8 @@ public class PanelFactory {
                     JList<String> list = (JList<String>) view;
                     DefaultListModel<String> model = new DefaultListModel<>();
                     groups.stream()
-                         .filter(filter)
-                         .forEach(g -> model.addElement(g.getName()));
+                            .filter(filter)
+                            .forEach(g -> model.addElement(g.getName()));
                     list.setModel(model);
                 }
             }
@@ -1023,17 +1031,17 @@ public class PanelFactory {
         for (Component comp : mainPanel.getComponents()) {
             if (comp instanceof JPanel && "Dashboard".equals(comp.getName())) {
                 JPanel dashboardPanel = (JPanel) comp;
-                
+
                 for (Component dashComp : dashboardPanel.getComponents()) {
-                    if (dashComp instanceof JPanel && 
-                        ((JPanel) dashComp).getBorder() instanceof TitledBorder && 
-                        "Student Information".equals(((TitledBorder) ((JPanel) dashComp).getBorder()).getTitle())) {
-                        
-                        updateStudentInfoLabels((JPanel)dashComp, student);
+                    if (dashComp instanceof JPanel &&
+                            ((JPanel) dashComp).getBorder() instanceof TitledBorder &&
+                            "Student Information".equals(((TitledBorder) ((JPanel) dashComp).getBorder()).getTitle())) {
+
+                        updateStudentInfoLabels((JPanel) dashComp, student);
                         break;
                     }
                 }
-                
+
                 dashboardPanel.revalidate();
                 dashboardPanel.repaint();
                 break;
@@ -1087,4 +1095,4 @@ public class PanelFactory {
 
         return panel;
     }
-} 
+}

@@ -183,7 +183,7 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
 
     @Override
     public boolean deleteStudent(int studentId) {
-       return sqlHandler.deleteStudent(studentId);
+        return sqlHandler.deleteStudent(studentId);
     }
 
     @Override

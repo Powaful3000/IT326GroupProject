@@ -156,13 +156,13 @@ public class StudentController {
             System.out.println("Error: Group is null");
             return false;
         }
-        
+
         System.out.println("Group details:");
         System.out.println("- ID: " + group.getID());
         System.out.println("- Name: " + group.getName());
         System.out.println("- Description: " + group.getDescription());
         System.out.println("- Creation Date: " + group.getCreationDate());
-        
+
         System.out.println("\nForwarding to groupHandler.addGroup()...");
         boolean result = groupHandler.addGroup(group);
         System.out.println("GroupHandler result: " + (result ? "success" : "failure"));
@@ -177,9 +177,9 @@ public class StudentController {
     }
 
     public boolean joinGroup(Group group) {
-        System.out.println("DEBUG: joinGroup called for group: " + 
-            (group != null ? group.getName() : "null"));
-        
+        System.out.println("DEBUG: joinGroup called for group: " +
+                (group != null ? group.getName() : "null"));
+
         if (group == null) {
             System.err.println("Cannot join null group");
             return false;
@@ -211,14 +211,14 @@ public class StudentController {
 
     public List<Student> searchStudents(String searchTerm) {
         return studentHandler.getAllStudents().stream()
-            .filter(s -> s.getName().toLowerCase().contains(searchTerm.toLowerCase()))
-            .collect(Collectors.toList());
+                .filter(s -> s.getName().toLowerCase().contains(searchTerm.toLowerCase()))
+                .collect(Collectors.toList());
     }
 
     public List<Student> searchStudentsByTag(Tag tag) {
         return studentHandler.getAllStudents().stream()
-            .filter(s -> s.getTags().contains(tag))
-            .collect(Collectors.toList());
+                .filter(s -> s.getTags().contains(tag))
+                .collect(Collectors.toList());
     }
 
     public List<Student> getGroupMembers(Group group) {

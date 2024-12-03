@@ -14,8 +14,8 @@ public class Application {
         GroupHandler groupHandler = new GroupHandler(dbHandler);
 
         // Initialize controller
-        final StudentController studentController = new StudentController(studentHandler, groupHandler, 
-            (MySQLHandler)database);
+        final StudentController studentController = new StudentController(studentHandler, groupHandler,
+                (MySQLHandler) database);
 
         // Start GUI
         SwingUtilities.invokeLater(() -> new MainGUI(studentController, dbHandler));
@@ -26,4 +26,4 @@ public class Application {
             dbHandler.disconnect();
         }));
     }
-} 
+}
