@@ -22,6 +22,7 @@ public class MainGUI extends JFrame {
     private JPanel groupPanel;
     private JPanel tagPanel;
     private JPanel settingsPanel;
+    private DialogManager dialogManager;
 
     public MainGUI(StudentController studentController, DatabaseHandler dbHandler) {
         this.studentController = studentController;
@@ -30,6 +31,7 @@ public class MainGUI extends JFrame {
         postHandler = new PostHandler();
         tagHandler = new TagHandler();
         createAndShowGUI();
+        dialogManager = new DialogManager(this, dbHandler, studentHandler, postHandler, tagHandler);
     }
 
     private void createAndShowGUI() {
@@ -119,32 +121,7 @@ public class MainGUI extends JFrame {
         // Login Button
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener(e -> {
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
-
-            if (!Validator.isValidString(username) || !Validator.isValidString(password)) {
-                JOptionPane.showMessageDialog(null, "Please enter both username and password");
-                return;
-            }
-
-            System.out.println("Attempting authentication for user: " + username);
-
-            Student authenticatedStudent = dbHandler.authenticateStudent(username, password);
-            if (authenticatedStudent != null) {
-                StudentHandler studentHandler = studentController.getStudentHandler();
-                studentHandler.setCurrentStudent(authenticatedStudent);
-                studentHandler.addStudent(authenticatedStudent);
-
-                updateDashboardInfo(authenticatedStudent);
-                JOptionPane.showMessageDialog(null, "Login successful!");
-                System.out.println("Showing dashboard panel");
-                cardLayout.show(mainPanel, "Dashboard");
-                // Clear login fields
-                usernameField.setText("");
-                passwordField.setText("");
-            } else {
-                JOptionPane.showMessageDialog(null, "Invalid username or password");
-            }
+            dialogManager.handleLoginAttempt(usernameField, passwordField, mainPanel);
         });
         gbc.gridy = 3;
         gbc.gridx = 0;
@@ -204,33 +181,7 @@ public class MainGUI extends JFrame {
         // Create Account Button
         JButton createButton = new JButton("Create Account");
         createButton.addActionListener(e -> {
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
-            String year = (String) yearComboBox.getSelectedItem();
-
-            if (!Validator.isValidString(username) || !Validator.isValidPassword(password)) {
-                JOptionPane.showMessageDialog(null,
-                        "Invalid username or password. Password must be at least 8 characters long and include at least one letter and one number.");
-                return;
-            }
-
-            if (dbHandler.doesUsernameExist(username)) {
-                JOptionPane.showMessageDialog(null, "Username already exists. Please choose a different username.");
-                return;
-            }
-
-            int id = (int) (Math.random() * 9000) + 1000;
-            Student newStudent = new Student(id, username, year, null, null, null);
-
-            if (dbHandler.addStudent(newStudent, password)) {
-                JOptionPane.showMessageDialog(null, "Account created successfully!");
-                cardLayout.show(mainPanel, "Login");
-                usernameField.setText("");
-                passwordField.setText("");
-                yearComboBox.setSelectedIndex(0);
-            } else {
-                JOptionPane.showMessageDialog(null, "Failed to create account. Please try again.");
-            }
+            dialogManager.handleCreateAccount(usernameField, passwordField, yearComboBox, mainPanel);
         });
         gbc.gridy = 4;
         gbc.gridx = 0;
@@ -272,19 +223,7 @@ public class MainGUI extends JFrame {
         
         JButton createPostBtn = new JButton("Create Post");
         createPostBtn.addActionListener(e -> {
-            String content = postContent.getText().trim();
-            if (!content.isEmpty()) {
-                Student currentStudent = studentHandler.getCurrentStudent();
-                if (currentStudent != null) {
-                    Post post = new Post(0, content, currentStudent, null); // ID will be set by database
-                    dbHandler.createPost(post);
-                    postContent.setText("");
-                    refreshPostLists(); // Method to refresh all post lists
-                    JOptionPane.showMessageDialog(this, "Post created successfully!");
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Post content cannot be empty!");
-            }
+            dialogManager.handleCreatePost(postContent, this::refreshPostLists);
         });
 
         createPostPanel.add(postScrollPane, BorderLayout.CENTER);
@@ -310,28 +249,12 @@ public class MainGUI extends JFrame {
         
         editPostBtn.addActionListener(e -> {
             Post selectedPost = myPostsList.getSelectedValue();
-            if (selectedPost != null) {
-                showEditPostDialog(selectedPost);
-                refreshPostLists();
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a post to edit!");
-            }
+            dialogManager.handleEditPostButtonClick(selectedPost, this::refreshPostLists);
         });
 
         deletePostBtn.addActionListener(e -> {
             Post selectedPost = myPostsList.getSelectedValue();
-            if (selectedPost != null) {
-                int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to delete this post?",
-                    "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    postHandler.deletePost(selectedPost);
-                    refreshPostLists();
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a post to delete!");
-            }
+            dialogManager.handleDeletePost(selectedPost, this::refreshPostLists);
         });
 
         myPostsButtonPanel.add(editPostBtn);
@@ -360,15 +283,7 @@ public class MainGUI extends JFrame {
         
         removeBookmarkBtn.addActionListener(e -> {
             Post selectedPost = bookmarkedPostsList.getSelectedValue();
-            if (selectedPost != null) {
-                Student currentStudent = studentHandler.getCurrentStudent();
-                if (currentStudent != null) {
-                    dbHandler.bookmarkPost(currentStudent.getID(), selectedPost.getID()); // Toggle bookmark
-                    refreshPostLists();
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a post to remove bookmark!");
-            }
+            dialogManager.handleRemoveBookmark(selectedPost, this::refreshPostLists);
         });
 
         bookmarkButtonPanel.add(removeBookmarkBtn);
@@ -702,39 +617,12 @@ public class MainGUI extends JFrame {
         addMemberBtn.addActionListener(e -> showAddMemberDialog(group));
         removeMemberBtn.addActionListener(e -> {
             int selectedRow = memberTable.getSelectedRow();
-            if (selectedRow >= 0) {
-                String memberName = (String) memberTable.getValueAt(selectedRow, 0);
-                Student member = studentHandler.getStudentByName(memberName);
-                if (member != null) {
-                    int confirm = JOptionPane.showConfirmDialog(this,
-                        "Are you sure you want to remove " + memberName + " from the group?",
-                        "Confirm Removal",
-                        JOptionPane.YES_NO_OPTION);
-                    if (confirm == JOptionPane.YES_OPTION) {
-                        if (dbHandler.leaveGroup(group, member)) {
-                            refreshGroupDetails(group);
-                            JOptionPane.showMessageDialog(this, "Member removed successfully!");
-                        } else {
-                            JOptionPane.showMessageDialog(this, "Failed to remove member!");
-                        }
-                    }
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a member to remove!");
-            }
+            dialogManager.handleRemoveMember(selectedRow, memberTable, group, this::refreshGroupDetails);
         });
 
         setEndDateBtn.addActionListener(e -> {
             int selectedRow = memberTable.getSelectedRow();
-            if (selectedRow >= 0) {
-                String memberName = (String) memberTable.getValueAt(selectedRow, 0);
-                Student member = studentHandler.getStudentByName(memberName);
-                if (member != null) {
-                    showSetEndDateDialog(group, member);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a member to set end date!");
-            }
+            dialogManager.handleSetEndDate(selectedRow, memberTable, group, this::refreshGroupDetails);
         });
 
         memberButtonPanel.add(addMemberBtn);
@@ -819,20 +707,7 @@ public class MainGUI extends JFrame {
         JButton cancelButton = new JButton("Cancel");
 
         okButton.addActionListener(e -> {
-            int year = (Integer) yearBox.getSelectedItem();
-            int month = (Integer) monthBox.getSelectedItem();
-            int day = (Integer) dayBox.getSelectedItem();
-            
-            java.sql.Date endDate = java.sql.Date.valueOf(
-                String.format("%d-%02d-%02d", year, month, day));
-            
-            if (dbHandler.updateMembershipEndDate(member.getID(), group.getID(), endDate)) {
-                refreshGroupDetails(group);
-                JOptionPane.showMessageDialog(dialog, "End date set successfully!");
-                dialog.dispose();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Failed to set end date!");
-            }
+            dialogManager.handleEndDateOkButton(yearBox, monthBox, dayBox, dialog, group, member, this::refreshGroupDetails);
         });
 
         cancelButton.addActionListener(e -> dialog.dispose());
@@ -918,24 +793,7 @@ public class MainGUI extends JFrame {
         createTagPanel.add(createTagBtn, createGbc);
 
         createTagBtn.addActionListener(e -> {
-            String name = tagNameField.getText().trim();
-            String description = tagDescArea.getText().trim();
-            
-            if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tag name cannot be empty!");
-                return;
-            }
-
-            Tag newTag = new Tag(0, name, description); // ID will be set by database
-            if (!dbHandler.containsTag(newTag)) {
-                tagHandler.addTag(newTag);
-                tagNameField.setText("");
-                tagDescArea.setText("");
-                refreshTagLists();
-                JOptionPane.showMessageDialog(this, "Tag created successfully!");
-            } else {
-                JOptionPane.showMessageDialog(this, "A tag with this name already exists!");
-            }
+            dialogManager.handleCreateTag(tagNameField, tagDescArea, this::refreshTagLists);
         });
 
         // My Tags Section
@@ -953,28 +811,13 @@ public class MainGUI extends JFrame {
         
         removeTagBtn.addActionListener(e -> {
             Tag selectedTag = myTagsList.getSelectedValue();
-            if (selectedTag != null) {
-                Student currentStudent = studentHandler.getCurrentStudent();
-                if (currentStudent != null) {
-                    if (dbHandler.removeTagFromStudent(currentStudent.getID(), selectedTag.getID())) {
-                        refreshTagLists();
-                        JOptionPane.showMessageDialog(this, "Tag removed successfully!");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Failed to remove tag!");
-                    }
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a tag to remove!");
-            }
+            Student currentStudent = studentHandler.getCurrentStudent();
+            dialogManager.handleRemoveTag(selectedTag, currentStudent, this::refreshTagLists);
         });
 
         editTagBtn.addActionListener(e -> {
             Tag selectedTag = myTagsList.getSelectedValue();
-            if (selectedTag != null) {
-                showEditTagDialog(selectedTag);
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a tag to edit!");
-            }
+            dialogManager.handleEditTagButtonClick(selectedTag, this::refreshTagLists);
         });
 
         tagButtonPanel.add(removeTagBtn);
@@ -996,19 +839,8 @@ public class MainGUI extends JFrame {
         
         addTagBtn.addActionListener(e -> {
             Tag selectedTag = availableTagsList.getSelectedValue();
-            if (selectedTag != null) {
-                Student currentStudent = studentHandler.getCurrentStudent();
-                if (currentStudent != null) {
-                    if (dbHandler.addTagToStudent(currentStudent.getID(), selectedTag.getID())) {
-                        refreshTagLists();
-                        JOptionPane.showMessageDialog(this, "Tag added successfully!");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Failed to add tag!");
-                    }
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a tag to add!");
-            }
+            Student currentStudent = studentHandler.getCurrentStudent();
+            dialogManager.handleAddTag(selectedTag, currentStudent, this::refreshTagLists);
         });
 
         availableTagButtonPanel.add(addTagBtn);
@@ -1100,19 +932,7 @@ public class MainGUI extends JFrame {
         JButton cancelBtn = new JButton("Cancel");
 
         saveBtn.addActionListener(e -> {
-            String newName = nameField.getText().trim();
-            String newDesc = descArea.getText().trim();
-            
-            if (newName.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Tag name cannot be empty!");
-                return;
-            }
-
-            tag.setName(newName);
-            tag.setDescription(newDesc);
-            tagHandler.updateTag(tag);
-            refreshTagLists();
-            dialog.dispose();
+            dialogManager.handleEditTag(tag, nameField, descArea, dialog, this::refreshTagLists);
         });
 
         cancelBtn.addActionListener(e -> dialog.dispose());
@@ -1247,13 +1067,7 @@ public class MainGUI extends JFrame {
 
         JButton logoutButton = new JButton("Logout");
         logoutButton.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(null,
-                    "Are you sure you want to logout?",
-                    "Confirm Logout",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                cardLayout.show(mainPanel, "Welcome");
-            }
+            dialogManager.handleLogout(mainPanel);
         });
 
         navPanel.add(groupsButton);
@@ -1311,11 +1125,7 @@ public class MainGUI extends JFrame {
         // Anonymous Mode Toggle
         JCheckBox anonymousMode = new JCheckBox("Anonymous Mode");
         anonymousMode.addActionListener(e -> {
-            Student currentStudent = studentController.getStudentHandler().getCurrentStudent();
-            if (currentStudent != null) {
-                currentStudent.toggleAnonymousMode();
-                dbHandler.toggleAnonymousMode(currentStudent.getID(), anonymousMode.isSelected());
-            }
+            dialogManager.handleAnonymousModeToggle(anonymousMode.isSelected());
         });
 
         // Friend Management Section
@@ -1328,10 +1138,10 @@ public class MainGUI extends JFrame {
         JButton blockUserBtn = new JButton("Block User");
 
         // Add action listeners for each button
-        addFriendBtn.addActionListener(e -> showSendFriendRequestDialog());
-        viewRequestsBtn.addActionListener(e -> showFriendRequestsDialog());
-        viewFriendsBtn.addActionListener(e -> showFriendsListDialog());
-        blockUserBtn.addActionListener(e -> showBlockUserDialog());
+        addFriendBtn.addActionListener(e -> dialogManager.showSendFriendRequestDialog());
+        viewRequestsBtn.addActionListener(e -> dialogManager.showFriendRequestsDialog());
+        viewFriendsBtn.addActionListener(e -> dialogManager.showFriendsListDialog());
+        blockUserBtn.addActionListener(e -> dialogManager.showBlockUserDialog());
 
         friendPanel.add(addFriendBtn);
         friendPanel.add(viewRequestsBtn);

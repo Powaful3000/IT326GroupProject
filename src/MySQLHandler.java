@@ -761,4 +761,30 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         );
     }
 
+    public boolean removeFriend(int userId, int friendId) {
+        String query = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+        try (PreparedStatement stmt = prepareStatement(query)) {
+            stmt.setInt(1, userId);
+            stmt.setInt(2, friendId);
+            stmt.setInt(3, friendId);
+            stmt.setInt(4, userId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error removing friend: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean unblockUser(int blockerId, int blockedId) {
+        String query = "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+        try (PreparedStatement stmt = prepareStatement(query)) {
+            stmt.setInt(1, blockerId);
+            stmt.setInt(2, blockedId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error unblocking user: " + e.getMessage());
+            return false;
+        }
+    }
+
 }

@@ -156,4 +156,14 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     public List<Post> getBookmarkedPosts(int userId) {
         return sqlHandler.getBookmarkedPosts(userId);
     }
+
+    @Override
+    public boolean removeFriend(int userId, int friendId) {
+        return sqlHandler.removeFriend(userId, friendId);
+    }
+
+    @Override
+    public boolean unblockUser(int blockerId, int blockedId) {
+        return sqlHandler.unblockUser(blockerId, blockedId);
+    }
 }

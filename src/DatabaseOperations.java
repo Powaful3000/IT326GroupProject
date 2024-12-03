@@ -54,4 +54,8 @@ public interface DatabaseOperations {
     List<Post> getBookmarkedPosts(int userId);
 
     boolean toggleAnonymousMode(int userId, boolean isAnonymous);
+
+    boolean removeFriend(int userId, int friendId);
+
+    boolean unblockUser(int blockerId, int blockedId);
 }
