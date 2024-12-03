@@ -1,6 +1,5 @@
 import java.util.List;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 public class DatabaseHandler extends Database implements DatabaseOperations {
     private final MySQLHandler sqlHandler;
@@ -9,6 +8,10 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
         super(database.getDbName());
         this.sqlHandler = (MySQLHandler) database;
         System.out.println("DatabaseHandler created for database: " + database.getDbName());
+    }
+
+    public Database getDatabase() {
+        return sqlHandler;
     }
 
     @Override
@@ -191,5 +194,24 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     @Override
     public List<Post> getGroupPosts(int groupId) {
         return sqlHandler.getGroupPosts(groupId);
+    }
+
+    public Group findGroupByName(String groupName) {
+        return sqlHandler.findGroupByName(groupName);
+    }
+
+    @Override
+    public boolean isStudentInGroup(int studentId, int groupId) {
+        return sqlHandler.isStudentInGroup(studentId, groupId);
+    }
+
+    @Override
+    public boolean joinGroup(int studentId, int groupId) {
+        return sqlHandler.joinGroup(studentId, groupId);
+    }
+
+    @Override
+    public boolean leaveGroup(int studentId, int groupId) {
+        return sqlHandler.leaveGroup(studentId, groupId);
     }
 }

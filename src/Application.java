@@ -10,11 +10,12 @@ public class Application {
         dbHandler.connect();
 
         // Initialize handlers
-        StudentHandler studentHandler = new StudentHandler();
+        StudentHandler studentHandler = StudentHandler.getInstance();
         GroupHandler groupHandler = new GroupHandler(dbHandler);
 
         // Initialize controller
-        final StudentController studentController = new StudentController(studentHandler, groupHandler);
+        final StudentController studentController = new StudentController(studentHandler, groupHandler, 
+            (MySQLHandler)database);
 
         // Start GUI
         SwingUtilities.invokeLater(() -> new MainGUI(studentController, dbHandler));

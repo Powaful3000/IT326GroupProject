@@ -14,18 +14,20 @@ public class DialogManager {
     private final JPanel groupPanel;
     private Runnable refreshCallback;
     private PanelFactory panelFactory;
+    private final UIManager uiManager;
 
-    public DialogManager(JFrame parentFrame, DatabaseHandler dbHandler, StudentHandler studentHandler, PostHandler postHandler, TagHandler tagHandler, StudentController studentController, PanelFactory panelFactory) {
+    public DialogManager(JFrame parentFrame, DatabaseHandler dbHandler, StudentHandler studentHandler, PostHandler postHandler, TagHandler tagHandler, StudentController studentController, PanelFactory panelFactory, UIManager uiManager) {
         this.parentFrame = parentFrame;
         this.dbHandler = dbHandler;
         this.studentHandler = studentHandler;
         this.postHandler = postHandler;
         this.tagHandler = tagHandler;
         this.studentController = studentController;
-        this.mainPanel = ((MainGUI)parentFrame).getMainPanel();
+        this.mainPanel = uiManager.getMainPanel();
         this.groupPanel = findPanel(mainPanel, "Groups");
         this.refreshCallback = () -> {};
         this.panelFactory = panelFactory;
+        this.uiManager = uiManager;
     }
 
     private JPanel findPanel(Container container, String name) {
@@ -233,25 +235,11 @@ public class DialogManager {
             return false;
         }
 
-        System.out.println("Attempting authentication for user: " + username);
-
         Student authenticatedStudent = dbHandler.authenticateStudent(username, password);
         if (authenticatedStudent != null) {
             studentHandler.setCurrentStudent(authenticatedStudent);
             studentHandler.addStudent(authenticatedStudent);
-
-            if (parentFrame instanceof MainGUI) {
-                MainGUI mainGUI = (MainGUI) parentFrame;
-                panelFactory.updateDashboardInfo(authenticatedStudent);
-                panelFactory.refreshGroupLists(groupPanel);
-            }
-            
-            JOptionPane.showMessageDialog(parentFrame, "Login successful!");
-            System.out.println("Showing dashboard panel");
-            
-            // Get the CardLayout from mainPanel and show dashboard
-            CardLayout cardLayout = (CardLayout) mainPanel.getLayout();
-            cardLayout.show(mainPanel, "Dashboard");
+            handleLoginSuccess(authenticatedStudent);
             return true;
         } else {
             JOptionPane.showMessageDialog(parentFrame, "Invalid username or password");
@@ -259,56 +247,10 @@ public class DialogManager {
         }
     }
 
-    private void updateDashboardInfo(Student student) {
-        // Find the dashboard panel in the main panel
-        for (Component comp : parentFrame.getContentPane().getComponents()) {
-            if (comp instanceof JPanel) {
-                JPanel mainPanel = (JPanel) comp;
-                for (Component dashComp : mainPanel.getComponents()) {
-                    if (dashComp instanceof JPanel && "Dashboard".equals(dashComp.getName())) {
-                        JPanel dashboardPanel = (JPanel) dashComp;
-                        
-                        // Update the student information labels
-                        for (Component infoComp : dashboardPanel.getComponents()) {
-                            if (infoComp instanceof JPanel && 
-                                infoComp.getParent().getLayout() instanceof GridBagLayout) {
-                                JPanel infoPanel = (JPanel) infoComp;
-                                Component[] labels = infoPanel.getComponents();
-                                for (int i = 0; i < labels.length; i++) {
-                                    if (labels[i] instanceof JLabel) {
-                                        JLabel label = (JLabel) labels[i];
-                                        switch (i) {
-                                            case 1: // ID label
-                                                label.setText(String.valueOf(student.getID()));
-                                                break;
-                                            case 3: // Name label
-                                                label.setText(student.getName());
-                                                break;
-                                            case 5: // Year label
-                                                label.setText(student.getYear());
-                                                break;
-                                        }
-                                    }
-                                }
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     public void handleLoginAttempt(JTextField usernameField, JPasswordField passwordField, JPanel mainPanel) {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
-
-        if (handleLogin(username, password, mainPanel)) {
-            // Clear login fields
-            usernameField.setText("");
-            passwordField.setText("");
-        }
+        handleLogin(username, password, mainPanel);
     }
 
     public void handleCreateAccount(JTextField usernameField, JPasswordField passwordField, 
@@ -333,8 +275,8 @@ public class DialogManager {
 
         if (dbHandler.addStudent(newStudent, password)) {
             JOptionPane.showMessageDialog(parentFrame, "Account created successfully!");
-            CardLayout cardLayout = (CardLayout) mainPanel.getLayout();
-            cardLayout.show(mainPanel, "Login");
+            uiManager.enableAuthenticatedPanels(false);
+            uiManager.showPanel("Login");
             
             // Clear input fields
             usernameField.setText("");
@@ -652,17 +594,11 @@ public class DialogManager {
      * Handles the logout process
      * @param mainPanel The main panel containing the card layout
      */
-    public void handleLogout(JPanel mainPanel) {
-        int confirm = JOptionPane.showConfirmDialog(parentFrame,
-                "Are you sure you want to logout?",
-                "Confirm Logout",
-                JOptionPane.YES_NO_OPTION);
-                
-        if (confirm == JOptionPane.YES_OPTION) {
-            CardLayout cardLayout = (CardLayout) mainPanel.getLayout();
-            cardLayout.show(mainPanel, "Welcome");
-            studentHandler.setCurrentStudent(null);
-        }
+    public void handleLogout() {
+        studentHandler.setCurrentStudent(null);
+        uiManager.refreshPanels();
+        uiManager.enableAuthenticatedPanels(false);
+        uiManager.showPanel("Welcome");
     }
 
     /**
@@ -868,9 +804,7 @@ public class DialogManager {
         if (confirm == JOptionPane.YES_OPTION) {
             if (dbHandler.deleteStudent(currentStudent.getID())) {
                 JOptionPane.showMessageDialog(parentFrame, "Account deleted successfully");
-                CardLayout cardLayout = (CardLayout) mainPanel.getLayout();
-                cardLayout.show(mainPanel, "Welcome");
-                studentHandler.setCurrentStudent(null);
+                handleLogout();  // Use handleLogout instead of direct panel manipulation
             } else {
                 JOptionPane.showMessageDialog(parentFrame, "Failed to delete account");
             }
@@ -1489,5 +1423,116 @@ public class DialogManager {
 
     public void setPanelFactory(PanelFactory panelFactory) {
         this.panelFactory = panelFactory;
+    }
+
+    public UIManager getUIManager() {
+        return uiManager;
+    }
+
+    public void handleLoginSuccess(Student student) {
+        System.out.println("DEBUG: handleLoginSuccess called with student: " + 
+            (student != null ? student.getName() + "(ID:" + student.getID() + ")" : "null"));
+        
+        if (student == null) {
+            System.err.println("Cannot login null student");
+            return;
+        }
+        
+        studentHandler.setCurrentStudent(student);
+        System.out.println("DEBUG: Login success for student: " + student.getName());
+        
+        if (panelFactory != null) {
+            panelFactory.updateDashboardInfo(student);
+            panelFactory.refreshGroupLists(null);
+        }
+        uiManager.refreshPanels();
+        uiManager.enableAuthenticatedPanels(true);
+        uiManager.showPanel("Dashboard");
+        JOptionPane.showMessageDialog(parentFrame, "Login successful!");
+    }
+
+    public void showJoinGroupDialog() {
+        System.out.println("DEBUG: showJoinGroupDialog called");
+        Student currentStudent = studentHandler.getCurrentStudent();
+        System.out.println("DEBUG: Retrieved current student: " + 
+            (currentStudent != null ? currentStudent.getName() + "(ID:" + currentStudent.getID() + ")" : "null"));
+        
+        if (currentStudent == null) {
+            JOptionPane.showMessageDialog(parentFrame, "You must be logged in to join a group");
+            return;
+        }
+
+        String groupName = JOptionPane.showInputDialog(parentFrame, "Enter group name to join:");
+        System.out.println("DEBUG: User entered group name: " + groupName);
+        
+        if (groupName != null && !groupName.trim().isEmpty()) {
+            Group group = studentController.getGroupByName(groupName);
+            System.out.println("DEBUG: Found group: " + (group != null ? group.getName() : "null"));
+            
+            if (group != null && studentController.joinGroup(group)) {
+                System.out.println("DEBUG: Successfully joined group");
+                JOptionPane.showMessageDialog(parentFrame, "Successfully joined group!");
+                panelFactory.refreshGroupLists(null);
+            } else {
+                System.out.println("DEBUG: Failed to join group");
+                JOptionPane.showMessageDialog(parentFrame, "Failed to join group");
+            }
+        }
+    }
+
+    public void showLeaveGroupDialog() {
+        Student currentStudent = studentHandler.getCurrentStudent();
+        if (currentStudent == null) {
+            JOptionPane.showMessageDialog(parentFrame, "You must be logged in to leave a group");
+            return;
+        }
+
+        String groupName = JOptionPane.showInputDialog(parentFrame, "Enter group name to leave:");
+        if (groupName != null && !groupName.trim().isEmpty()) {
+            Group group = studentController.getGroupByName(groupName);
+            if (group != null && dbHandler.leaveGroup(group, currentStudent)) {
+                JOptionPane.showMessageDialog(parentFrame, "Successfully left group!");
+                panelFactory.refreshGroupLists(null);
+            } else {
+                JOptionPane.showMessageDialog(parentFrame, "Failed to leave group");
+            }
+        }
+    }
+
+    public boolean showCreateGroupDialog() {
+        String groupName = JOptionPane.showInputDialog(parentFrame, "Enter new group name:");
+        if (groupName != null && !groupName.trim().isEmpty()) {
+            String description = JOptionPane.showInputDialog(parentFrame, "Enter group description:");
+            if (description != null) {
+                Group newGroup = new Group(0, groupName, description);
+                if (studentController.createGroup(newGroup)) {
+                    JOptionPane.showMessageDialog(parentFrame, "Group created successfully!");
+                    uiManager.refreshGroupList();
+                    panelFactory.refreshGroupLists(null);
+                    return true;
+                } else {
+                    JOptionPane.showMessageDialog(parentFrame, "Failed to create group");
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void showGroupDetailsDialog() {
+        String groupName = JOptionPane.showInputDialog(parentFrame, "Enter group name to view:");
+        if (groupName != null && !groupName.trim().isEmpty()) {
+            Group group = studentController.getGroupByName(groupName);
+            if (group != null) {
+                // Create the panel
+                JPanel detailsPanel = panelFactory.createGroupDetailsPanel(group);
+                // Add it to the panel manager
+                uiManager.getPanelManager().addPanel("GroupDetails", detailsPanel);
+                // Show the panel
+                uiManager.showPanel("GroupDetails");
+            } else {
+                JOptionPane.showMessageDialog(parentFrame, "Group not found");
+            }
+        }
     }
 }

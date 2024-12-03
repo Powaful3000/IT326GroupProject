@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.ArrayList;
@@ -17,6 +19,8 @@ public class PanelFactory {
     private final JPanel mainPanel;
     private final PostHandler postHandler;
     private final TagHandler tagHandler;
+    private final PanelManager panelManager;
+    private final UIManager uiManager;
 
     public PanelFactory(StudentController studentController, DatabaseHandler dbHandler, 
                        StudentHandler studentHandler, DialogManager dialogManager,
@@ -30,6 +34,8 @@ public class PanelFactory {
         this.mainPanel = mainPanel;
         this.postHandler = postHandler;
         this.tagHandler = tagHandler;
+        this.panelManager = dialogManager.getUIManager().getPanelManager();
+        this.uiManager = dialogManager.getUIManager();
     }
 
     public void initializePanels() {
@@ -49,18 +55,26 @@ public class PanelFactory {
         dashboardPanel.setName("Dashboard");
         tagManagementPanel.setName("Tags");
         
-        // Add panels to main panel
-        mainPanel.add(welcomePanel, "Welcome");
-        mainPanel.add(loginPanel, "Login");
-        mainPanel.add(accountPanel, "Create Account");
-        mainPanel.add(dashboardPanel, "Dashboard");
-        mainPanel.add(groupManagementPanel, "Groups");
-        mainPanel.add(postManagementPanel, "Posts");
-        mainPanel.add(tagManagementPanel, "Tags");
-        mainPanel.add(searchPanel, "Search");
-        mainPanel.add(profilePanel, "Profile");
+        // Add panels to panel manager only (PanelManager handles adding to mainPanel)
+        panelManager.addPanel("Welcome", welcomePanel);
         
-        // Set up refresh callbacks after all panels are added
+        panelManager.addPanel("Login", loginPanel);
+        
+        panelManager.addPanel("Create Account", accountPanel);
+        
+        panelManager.addPanel("Dashboard", dashboardPanel);
+        
+        panelManager.addPanel("Groups", groupManagementPanel);
+        
+        panelManager.addPanel("Posts", postManagementPanel);
+        
+        panelManager.addPanel("Tags", tagManagementPanel);
+        
+        panelManager.addPanel("Search", searchPanel);
+        
+        panelManager.addPanel("Profile", profilePanel);
+        
+        // Set up refresh callbacks
         dialogManager.setRefreshCallback(() -> refreshTagLists(findPanel(mainPanel, "Tags")));
         
         // Initial refresh of group lists
@@ -99,14 +113,14 @@ public class PanelFactory {
 
         // Login button
         JButton loginButton = new JButton("Login");
-        loginButton.addActionListener(e -> cardLayout.show(mainPanel, "Login"));
+        loginButton.addActionListener(e -> uiManager.showPanel("Login"));
         gbc.gridy = 1;
         gbc.gridwidth = 1;
         welcomePanel.add(loginButton, gbc);
 
         // Create Account button
         JButton createAccountButton = new JButton("Create Account");
-        createAccountButton.addActionListener(e -> cardLayout.show(mainPanel, "Create Account"));
+        createAccountButton.addActionListener(e -> uiManager.showPanel("Create Account"));
         gbc.gridx = 1;
         welcomePanel.add(createAccountButton, gbc);
 
@@ -135,7 +149,7 @@ public class PanelFactory {
         gbc.gridx = 1;
         loginPanel.add(usernameField, gbc);
 
-        // Password FieldcreateWelcomePanel
+        // Password Field
         JLabel passwordLabel = new JLabel("Password:");
         JPasswordField passwordField = new JPasswordField(15);
         gbc.gridy = 2;
@@ -146,9 +160,12 @@ public class PanelFactory {
 
         // Login Button
         JButton loginButton = new JButton("Login");
-        loginButton.addActionListener(e -> {
-            dialogManager.handleLoginAttempt(usernameField, passwordField, mainPanel);
-        });
+        ActionListener loginAction = e -> dialogManager.handleLoginAttempt(usernameField, passwordField, mainPanel);
+        loginButton.addActionListener(loginAction);
+        
+        // Add enter key listener to password field
+        passwordField.addActionListener(loginAction);
+
         gbc.gridy = 3;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
@@ -156,9 +173,12 @@ public class PanelFactory {
 
         // Back Button
         JButton backButton = new JButton("Back");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
+        backButton.addActionListener(e -> uiManager.showPanel("Welcome"));
         gbc.gridy = 4;
         loginPanel.add(backButton, gbc);
+
+        // Request focus on username field
+        SwingUtilities.invokeLater(() -> usernameField.requestFocusInWindow());
 
         return loginPanel;
     }
@@ -216,7 +236,7 @@ public class PanelFactory {
 
         // Back Button
         JButton backButton = new JButton("Back");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "Welcome"));
+        backButton.addActionListener(e -> uiManager.showPanel("Welcome"));
         gbc.gridy = 5;
         createAccountPanel.add(backButton, gbc);
 
@@ -265,16 +285,16 @@ public class PanelFactory {
         navPanel.setBorder(BorderFactory.createTitledBorder("Navigation"));
 
         JButton groupsButton = new JButton("My Groups");
-        groupsButton.addActionListener(e -> cardLayout.show(mainPanel, "Groups"));
+        groupsButton.addActionListener(e -> uiManager.showPanel("Groups"));
 
         JButton postsButton = new JButton("My Posts");
-        postsButton.addActionListener(e -> cardLayout.show(mainPanel, "Posts"));
+        postsButton.addActionListener(e -> uiManager.showPanel("Posts"));
 
         JButton tagsButton = new JButton("Manage Tags");
-        tagsButton.addActionListener(e -> cardLayout.show(mainPanel, "Tags"));
+        tagsButton.addActionListener(e -> uiManager.showPanel("Tags"));
 
         JButton searchButton = new JButton("Search");
-        searchButton.addActionListener(e -> cardLayout.show(mainPanel, "Search"));
+        searchButton.addActionListener(e -> uiManager.showPanel("Search"));
 
         JButton profileButton = new JButton("Edit Profile");
         profileButton.addActionListener(e -> {
@@ -282,9 +302,7 @@ public class PanelFactory {
         });
 
         JButton logoutButton = new JButton("Logout");
-        logoutButton.addActionListener(e -> {
-            dialogManager.handleLogout(mainPanel);
-        });
+        logoutButton.addActionListener(e -> dialogManager.handleLogout());
 
         navPanel.add(groupsButton);
         navPanel.add(postsButton);
@@ -374,7 +392,7 @@ public class PanelFactory {
         // Navigation buttons at the bottom
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton backBtn = new JButton("Back to Dashboard");
-        backBtn.addActionListener(e -> cardLayout.show(mainPanel, "Dashboard"));
+        backBtn.addActionListener(e -> uiManager.showPanel("Dashboard"));
         navPanel.add(backBtn);
         postPanel.add(navPanel, BorderLayout.SOUTH);
 
@@ -557,7 +575,7 @@ public class PanelFactory {
         // Navigation buttons at the bottom
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton backBtn = new JButton("Back to Dashboard");
-        backBtn.addActionListener(e -> cardLayout.show(mainPanel, "Dashboard"));
+        backBtn.addActionListener(e -> uiManager.showPanel("Dashboard"));
         navPanel.add(backBtn);
         tagPanel.add(navPanel, BorderLayout.SOUTH);
 
@@ -635,7 +653,7 @@ public class PanelFactory {
         // Navigation buttons
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton backBtn = new JButton("Back to Dashboard");
-        backBtn.addActionListener(e -> cardLayout.show(mainPanel, "Dashboard"));
+        backBtn.addActionListener(e -> uiManager.showPanel("Dashboard"));
         navPanel.add(backBtn);
 
         gbc.gridy = 3;
@@ -736,7 +754,7 @@ public class PanelFactory {
         // Navigation buttons
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton backBtn = new JButton("Back to Dashboard");
-        backBtn.addActionListener(e -> cardLayout.show(mainPanel, "Dashboard"));
+        backBtn.addActionListener(e -> uiManager.showPanel("Dashboard"));
         navPanel.add(backBtn);
 
         searchPanel.add(contentPanel, BorderLayout.CENTER);
@@ -746,18 +764,35 @@ public class PanelFactory {
     }
 
     public JPanel createGroupManagementPanel() {
-        JPanel groupPanel = new JPanel(new GridBagLayout());
+        JPanel groupPanel = new JPanel(new BorderLayout());
         groupPanel.setName("Groups");
+
+        // Create top panel for title and back button
+        JPanel topPanel = new JPanel(new BorderLayout());
+        
+        // Back button
+        JButton backButton = new JButton("← Back");
+        backButton.addActionListener(e -> uiManager.showPanel("Dashboard"));
+        topPanel.add(backButton, BorderLayout.WEST);
+        
+        // Title
+        JLabel titleLabel = new JLabel("Group Management", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        topPanel.add(titleLabel, BorderLayout.CENTER);
+        
+        groupPanel.add(topPanel, BorderLayout.NORTH);
+
+        // Add keyboard listener for Escape
+        groupPanel.registerKeyboardAction(
+            e -> uiManager.showPanel("Dashboard"),
+            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+            JComponent.WHEN_IN_FOCUSED_WINDOW
+        );
+
+        // Main content panel
+        JPanel contentPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-
-        // Title
-        JLabel titleLabel = new JLabel("Group Management");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        groupPanel.add(titleLabel, gbc);
 
         // Search/Filter Panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -797,9 +832,10 @@ public class PanelFactory {
         searchPanel.add(new JLabel("Search: "));
         searchPanel.add(searchField);
 
-        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        groupPanel.add(searchPanel, gbc);
+        contentPanel.add(searchPanel, gbc);
 
         // Create a split panel layout
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -811,6 +847,27 @@ public class PanelFactory {
         groupList.setFont(new Font("Arial", Font.PLAIN, 14));
         JScrollPane availableScrollPane = new JScrollPane(groupList);
         availableGroupsPanel.add(availableScrollPane, BorderLayout.CENTER);
+
+        // Group Management Buttons Panel
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 5, 5));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        JButton joinGroupBtn = new JButton("Join Group");
+        JButton leaveGroupBtn = new JButton("Leave Group");
+        JButton createGroupBtn = new JButton("Create Group");
+        JButton viewDetailsBtn = new JButton("View Details");
+        
+        joinGroupBtn.addActionListener(e -> dialogManager.showJoinGroupDialog());
+        leaveGroupBtn.addActionListener(e -> dialogManager.showLeaveGroupDialog());
+        createGroupBtn.addActionListener(e -> dialogManager.showCreateGroupDialog());
+        viewDetailsBtn.addActionListener(e -> dialogManager.showGroupDetailsDialog());
+        
+        buttonPanel.add(joinGroupBtn);
+        buttonPanel.add(leaveGroupBtn);
+        buttonPanel.add(createGroupBtn);
+        buttonPanel.add(viewDetailsBtn);
+        
+        availableGroupsPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         // My Groups Panel
         JPanel myGroupsPanel = new JPanel(new BorderLayout());
@@ -836,12 +893,15 @@ public class PanelFactory {
         splitPane.setTopComponent(availableGroupsPanel);
         splitPane.setBottomComponent(myGroupsPanel);
 
-        // Update the layout
-        gbc.gridy = 2;
+        // Add split pane to content panel
+        gbc.gridy = 1;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        groupPanel.add(splitPane, gbc);
+        contentPanel.add(splitPane, gbc);
+
+        // Add content panel to main panel
+        groupPanel.add(contentPanel, BorderLayout.CENTER);
 
         return groupPanel;
     }
@@ -895,7 +955,7 @@ public class PanelFactory {
         // Navigation
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton backBtn = new JButton("Back to Groups");
-        backBtn.addActionListener(e -> cardLayout.show(mainPanel, "Groups"));
+        backBtn.addActionListener(e -> uiManager.showPanel("Groups"));
         navPanel.add(backBtn);
         detailsPanel.add(navPanel, BorderLayout.SOUTH);
 
@@ -913,63 +973,43 @@ public class PanelFactory {
             }
 
             List<Group> updatedGroups = studentController.getAllGroups();
+            Student currentStudent = studentHandler.getCurrentStudent();
             
-            // Find the JSplitPane
-            Component splitPaneComponent = null;
+            // Find and update both lists in the split pane
             for (Component comp : groupPanel.getComponents()) {
                 if (comp instanceof JSplitPane) {
-                    splitPaneComponent = comp;
-                    break;
-                }
-                if (comp instanceof JPanel) {
-                    // Search one level deeper if needed
-                    for (Component innerComp : ((JPanel) comp).getComponents()) {
-                        if (innerComp instanceof JSplitPane) {
-                            splitPaneComponent = innerComp;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (splitPaneComponent instanceof JSplitPane) {
-                JSplitPane splitPane = (JSplitPane) splitPaneComponent;
-                Component topComponent = splitPane.getTopComponent();
-                
-                if (topComponent instanceof JPanel) {
-                    JPanel availableGroupsPanel = (JPanel) topComponent;
-                    for (Component comp : availableGroupsPanel.getComponents()) {
-                        if (comp instanceof JScrollPane) {
-                            JScrollPane scrollPane = (JScrollPane) comp;
-                            Component view = scrollPane.getViewport().getView();
-                            if (view instanceof JList) {
-                                @SuppressWarnings("unchecked")
-                                JList<String> groupList = (JList<String>) view;
-                                DefaultListModel<String> model = new DefaultListModel<>();
-                                for (Group g : updatedGroups) {
-                                    model.addElement(g.getName());
-                                }
-                                groupList.setModel(model);
-                                return;  // Successfully updated
-                            }
-                        }
-                    }
+                    JSplitPane splitPane = (JSplitPane) comp;
+                    
+                    // Update Available Groups list
+                    JPanel availablePanel = (JPanel) splitPane.getTopComponent();
+                    updateListInPanel(availablePanel, updatedGroups, group -> true);
+                    
+                    // Update My Groups list
+                    JPanel myGroupsPanel = (JPanel) splitPane.getBottomComponent();
+                    updateListInPanel(myGroupsPanel, updatedGroups, 
+                        group -> currentStudent != null && group.isMember(currentStudent));
                 }
             }
-            System.err.println("Warning: Could not find group list to update");
         } catch (Exception e) {
             System.err.println("Error refreshing group lists: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private void updateGroupList(DefaultListModel<String> model, JPanel groupPanel) {
-        for (Component comp : findComponentsByTitle(groupPanel, "Available Groups")) {
-            if (comp instanceof JList<?>) {
-                @SuppressWarnings("unchecked")
-                JList<String> list = (JList<String>) comp;
-                list.setModel(model);
-                break;
+    private void updateListInPanel(JPanel panel, List<Group> groups, java.util.function.Predicate<Group> filter) {
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JScrollPane) {
+                JScrollPane scrollPane = (JScrollPane) comp;
+                Component view = scrollPane.getViewport().getView();
+                if (view instanceof JList) {
+                    @SuppressWarnings("unchecked")
+                    JList<String> list = (JList<String>) view;
+                    DefaultListModel<String> model = new DefaultListModel<>();
+                    groups.stream()
+                         .filter(filter)
+                         .forEach(g -> model.addElement(g.getName()));
+                    list.setModel(model);
+                }
             }
         }
     }
@@ -1014,5 +1054,37 @@ public class PanelFactory {
                 }
             }
         }
+    }
+
+    private JPanel createGroupsPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setName("Groups");
+
+        // Get the group list and buttons from UIManager
+        JList<Group> groupList = uiManager.getGroupList();
+        JScrollPane scrollPane = new JScrollPane(groupList);
+
+        // Create button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JButton createButton = new JButton("Create Group");
+        JButton joinButton = new JButton("Join Group");
+        JButton leaveButton = new JButton("Leave Group");
+
+        createButton.addActionListener(e -> {
+            if (dialogManager.showCreateGroupDialog()) {
+                uiManager.updateGroupList();
+            }
+        });
+        joinButton.addActionListener(e -> dialogManager.showJoinGroupDialog());
+        leaveButton.addActionListener(e -> dialogManager.showLeaveGroupDialog());
+
+        buttonPanel.add(createButton);
+        buttonPanel.add(joinButton);
+        buttonPanel.add(leaveButton);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
     }
 } 

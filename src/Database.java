@@ -69,4 +69,12 @@ public abstract class Database {
     public abstract boolean addPostToGroup(int postId, int groupId);
 
     public abstract boolean updateMembershipEndDate(int studentId, int groupId, java.sql.Date endDate);
+
+    public abstract boolean isStudentInGroup(int studentId, int groupId);
+
+    public abstract boolean joinGroup(int studentId, int groupId);
+
+    public abstract boolean leaveGroup(int studentId, int groupId);
+
+    public abstract Group findGroupByName(String groupName);
 }

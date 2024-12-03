@@ -6,14 +6,16 @@ public class StudentController {
 
     private final StudentHandler studentHandler;
     private final GroupHandler groupHandler;
+    private final MySQLHandler dbHandler;
 
     // Constructor
-    public StudentController(StudentHandler studentHandler, GroupHandler groupHandler) {
+    public StudentController(StudentHandler studentHandler, GroupHandler groupHandler, MySQLHandler dbHandler) {
         if (studentHandler == null) {
             throw new IllegalArgumentException("StudentHandler cannot be null");
         }
         this.studentHandler = studentHandler;
         this.groupHandler = groupHandler;
+        this.dbHandler = dbHandler;
     }
 
     // Register a new student
@@ -175,6 +177,9 @@ public class StudentController {
     }
 
     public boolean joinGroup(Group group) {
+        System.out.println("DEBUG: joinGroup called for group: " + 
+            (group != null ? group.getName() : "null"));
+        
         if (group == null) {
             System.err.println("Cannot join null group");
             return false;
@@ -186,10 +191,18 @@ public class StudentController {
             return false;
         }
 
-        System.out.println("Attempting to join group: " + group.getName());
-        System.out.println("Current student: " + currentStudent.getName());
+        // Check if student is already a member
+        if (dbHandler.isStudentInGroup(currentStudent.getID(), group.getID())) {
+            System.err.println("Student is already a member of this group");
+            return false;
+        }
 
-        return groupHandler.addMemberToGroup(group.getID(), currentStudent);
+        System.out.println("DEBUG: Attempting to join group: " + group.getName());
+        System.out.println("DEBUG: Current student: " + currentStudent.getName());
+
+        boolean success = groupHandler.addMemberToGroup(group.getID(), currentStudent);
+        System.out.println("DEBUG: Join group result: " + success);
+        return success;
     }
 
     public Group getGroupByID(int groupID) {
@@ -214,5 +227,21 @@ public class StudentController {
             return new ArrayList<>();
         }
         return group.getMembers();
+    }
+
+    public boolean joinGroup(int groupId) {
+        Student currentStudent = studentHandler.getCurrentStudent();
+        if (currentStudent != null) {
+            return dbHandler.joinGroup(currentStudent.getID(), groupId);
+        }
+        return false;
+    }
+
+    public boolean leaveGroup(int groupId) {
+        Student currentStudent = studentHandler.getCurrentStudent();
+        if (currentStudent != null) {
+            return dbHandler.leaveGroup(currentStudent.getID(), groupId);
+        }
+        return false;
     }
 }

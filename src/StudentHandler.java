@@ -8,8 +8,17 @@ public class StudentHandler {
 
     private Student currentStudent;
 
+    private static StudentHandler instance;  // Add singleton pattern
+
+    public static StudentHandler getInstance() {
+        if (instance == null) {
+            instance = new StudentHandler();
+        }
+        return instance;
+    }
+
     // Constructor
-    public StudentHandler() {
+    private StudentHandler() {
         this.students = new ArrayList<>();
     }
 
@@ -19,10 +28,16 @@ public class StudentHandler {
             System.err.println("Cannot add null student.");
             return false;
         }
-        if (getStudentById(student.getID()) != null) {
-            System.err.println("Student with ID " + student.getID() + " already exists.");
-            return false;
+        
+        Student existingStudent = getStudentById(student.getID());
+        if (existingStudent != null) {
+            // Update existing student instead of adding duplicate
+            existingStudent.setName(student.getName());
+            existingStudent.setYear(student.getYear());
+            System.out.println("Updated existing student: " + student.getName());
+            return true;
         }
+        
         students.add(student);
         System.out.println("Student added: " + student.getName());
         return true;
@@ -116,11 +131,21 @@ public class StudentHandler {
     }
 
     public Student getCurrentStudent() {
+        System.out.println("DEBUG: getCurrentStudent called. Current student: " + 
+            (currentStudent != null ? currentStudent.getName() + "(ID:" + currentStudent.getID() + ")" : "null"));
         return currentStudent;
     }
 
     public void setCurrentStudent(Student student) {
+        System.out.println("DEBUG: setCurrentStudent called with student: " + 
+            (student != null ? student.getName() + "(ID:" + student.getID() + ")" : "null"));
         this.currentStudent = student;
+        if (student != null && !students.contains(student)) {
+            students.add(student);
+            System.out.println("DEBUG: Added student to list: " + student.getName());
+        }
+        System.out.println("DEBUG: Current student set to: " + 
+            (student != null ? student.getName() : "null"));
     }
 
     public Student getStudentByName(String name) {
