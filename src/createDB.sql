@@ -148,3 +148,10 @@ CREATE TABLE bookmarked_posts (
 -- Create a test user with a hashed password
 INSERT INTO students (userID, userName, password, userYear)
 VALUES (1001, 'testuser1', SHA2('testuser1', 256), 'Senior');  -- Password is hashed using SHA-256
+
+-- Insert a test group
+INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) 
+VALUES (1, 'tg1', 'td1', 0, CURRENT_TIMESTAMP);
+-- Insert a test group
+INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) 
+VALUES (2, 'tg2', 'td2', 0, CURRENT_TIMESTAMP);
