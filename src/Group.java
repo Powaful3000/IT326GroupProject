@@ -1,110 +1,149 @@
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Group {
+    private int id;
+    private String name;
+    private String description;
+    private Date creationDate;
+    private List<Student> members;
+    private Map<Integer, Date> memberJoinDates;  // StudentID -> JoinDate
+    private Map<Integer, Date> memberEndDates;   // StudentID -> EndDate
 
-    // Attributes
-    private int groupID;
-    private String groupName;
-    private int groupSize;
-    private String groupDescription;
-    private List<Student> groupMembers;
-
-    // Constructor
-    public Group(int groupID, String groupName, int groupSize, String groupDescription, List<Student> groupMembers) {
-        this.groupID = groupID;
-        this.groupName = groupName;
-        this.groupSize = groupSize;
-        this.groupDescription = groupDescription;
-        this.groupMembers = groupMembers;
+    public Group(int id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.creationDate = new Date(); // Current date/time
+        this.members = new ArrayList<>();
+        this.memberJoinDates = new HashMap<>();
+        this.memberEndDates = new HashMap<>();
     }
 
-    // Add this constructor overload
-    public Group(String groupName, String groupDescription) {
-        this.groupID = (int) (Math.random() * 9000) + 1000; // Simple ID generation
-        this.groupName = groupName;
-        this.groupDescription = groupDescription;
-        this.groupSize = 0;
-        this.groupMembers = new ArrayList<>();
-    }
-
-    // Getters
     public int getID() {
-        return groupID;
+        return id;
+    }
+
+    public void setID(int id) {
+        this.id = id;
     }
 
     public String getName() {
-        return groupName;
+        return name;
     }
 
-    public int getSize() {
-        return groupSize;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {
-        return groupDescription;
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
     }
 
     public List<Student> getMembers() {
-        return groupMembers;
+        return new ArrayList<>(members);
     }
 
-    // Setters
-    public void setID(int groupID) {
-        this.groupID = groupID;
-    }
-
-    public void setName(String groupName) {
-        this.groupName = groupName;
-    }
-
-    public void setSize(int groupSize) {
-        this.groupSize = groupSize;
-    }
-
-    public void setDescription(String groupDescription) {
-        this.groupDescription = groupDescription;
-    }
-
-    public void setMembers(List<Student> groupMembers) {
-        this.groupMembers = groupMembers;
-    }
-
-    // Methods
-
-    // Add a student to the group
-    public boolean addMember(Student student) {
-        if (groupMembers.contains(student)) {
-            return false; // Student is already a member
+    public List<Student> getActiveMembers() {
+        List<Student> activeMembers = new ArrayList<>();
+        for (Student member : members) {
+            if (!memberEndDates.containsKey(member.getID())) {
+                activeMembers.add(member);
+            }
         }
-        groupMembers.add(student);
-        groupSize++;
+        return activeMembers;
+    }
+
+    public boolean addMember(Student student) {
+        if (student == null || members.contains(student)) {
+            return false;
+        }
+        members.add(student);
+        memberJoinDates.put(student.getID(), new Date());
         return true;
     }
 
-    // Remove a student from the group
     public boolean removeMember(Student student) {
-        if (groupMembers.remove(student)) {
-            groupSize--;
-            return true; // Student successfully removed
+        if (student == null || !members.contains(student)) {
+            return false;
         }
-        return false; // Student was not a member
+        memberEndDates.put(student.getID(), new Date());
+        return true;
     }
 
-    // Check if a student is a member of the group
-    public boolean isMember(Student student) {
-        return groupMembers.contains(student);
+    public Date getMemberJoinDate(Student student) {
+        if (student == null || !members.contains(student)) {
+            return null;
+        }
+        return memberJoinDates.get(student.getID());
     }
 
-    // Print group details
-    public void printDetails() {
-        System.out.println("Group ID: " + groupID);
-        System.out.println("Group Name: " + groupName);
-        System.out.println("Group Size: " + groupSize);
-        System.out.println("Group Description: " + groupDescription);
-        System.out.println("Members:");
-        for (Student student : groupMembers) {
-            System.out.println(" - " + student.getName());
+    public Date getMemberEndDate(Student student) {
+        if (student == null || !members.contains(student)) {
+            return null;
         }
+        return memberEndDates.get(student.getID());
+    }
+
+    public boolean setMemberEndDate(Student student, Date endDate) {
+        if (student == null || !members.contains(student)) {
+            return false;
+        }
+        if (endDate == null) {
+            memberEndDates.remove(student.getID());
+        } else {
+            memberEndDates.put(student.getID(), endDate);
+        }
+        return true;
+    }
+
+    public boolean isMemberActive(Student student) {
+        if (student == null || !members.contains(student)) {
+            return false;
+        }
+        return !memberEndDates.containsKey(student.getID());
+    }
+
+    public void setMemberJoinDate(Student student, Date joinDate) {
+        if (student != null && members.contains(student)) {
+            memberJoinDates.put(student.getID(), joinDate);
+        }
+    }
+
+    public int getSize() {
+        return members.size();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Group other = (Group) obj;
+        return id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + members.size() + " members)";
     }
 }

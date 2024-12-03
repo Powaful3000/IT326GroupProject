@@ -93,4 +93,19 @@ public class PostHandler {
             }
         }
     }
+
+    // Delete a post
+    public boolean deletePost(Post post) {
+        if (post == null) {
+            System.err.println("Cannot delete null post.");
+            return false;
+        }
+        boolean removed = posts.remove(post);
+        if (removed) {
+            System.out.println("Post deleted: " + post.getContent());
+        } else {
+            System.err.println("Failed to delete post: Post not found");
+        }
+        return removed;
+    }
 }

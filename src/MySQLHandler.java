@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -33,8 +34,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS
             + " (postID, postContent, postOwner) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_POST = "DELETE FROM " + TABLE_POSTS + " WHERE postID = ?";
-    private static final String SQL_INSERT_GROUP = "INSERT INTO " + TABLE_GROUPS
-            + " (groupID, groupName, groupSize, groupDescription) VALUES (?, ?, ?, ?)";
+    private static final String SQL_INSERT_GROUP = "INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) VALUES (?, ?, ?, DEFAULT, DEFAULT)";
     private static final String SQL_SELECT_GROUP_MEMBERS = "SELECT s.* FROM " + TABLE_STUDENTS + " s JOIN "
             + TABLE_MEMBERSHIPS +
             " gm ON s.userID = gm.studentID WHERE gm.groupID = ?";
@@ -70,6 +70,36 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             "WHERE studentID = ? AND groupID = ? AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
     private static final String SQL_CHECK_TAG_EXISTS = "SELECT COUNT(*) FROM " + TABLE_TAGS
             + " WHERE name = ? AND description = ?";
+
+    // New SQL constants for friend system
+    private static final String SQL_SEND_FRIEND_REQUEST = 
+        "INSERT INTO friend_requests (fromUserID, toUserID) VALUES (?, ?)";
+    private static final String SQL_ACCEPT_FRIEND_REQUEST = 
+        "UPDATE friend_requests SET status = 'ACCEPTED' WHERE requestID = ?";
+    private static final String SQL_DECLINE_FRIEND_REQUEST = 
+        "UPDATE friend_requests SET status = 'DECLINED' WHERE requestID = ?";
+    private static final String SQL_GET_FRIEND_REQUESTS = 
+        "SELECT s.* FROM students s JOIN friend_requests fr ON s.userID = fr.fromUserID " +
+        "WHERE fr.toUserID = ? AND fr.status = 'PENDING'";
+    private static final String SQL_GET_FRIENDS = 
+        "SELECT s.* FROM students s JOIN friends f ON (s.userID = f.userID2 OR s.userID = f.userID1) " +
+        "WHERE (f.userID1 = ? OR f.userID2 = ?) AND s.userID != ?";
+    
+    // SQL constants for blocking system
+    private static final String SQL_BLOCK_USER = 
+        "INSERT INTO blocked_users (blockerID, blockedID) VALUES (?, ?)";
+    private static final String SQL_GET_BLOCKED_USERS = 
+        "SELECT s.* FROM students s JOIN blocked_users b ON s.userID = b.blockedID WHERE b.blockerID = ?";
+    
+    // SQL constants for bookmarks and anonymous mode
+    private static final String SQL_BOOKMARK_POST = 
+        "INSERT INTO bookmarked_posts (userID, postID) VALUES (?, ?)";
+    private static final String SQL_GET_BOOKMARKED_POSTS = 
+        "SELECT p.* FROM posts p JOIN bookmarked_posts bp ON p.postID = bp.postID WHERE bp.userID = ?";
+    private static final String SQL_TOGGLE_ANONYMOUS = 
+        "UPDATE students SET isAnonymous = ? WHERE userID = ?";
+    private static final String SQL_GET_STUDENT_BY_ID = 
+        "SELECT * FROM students WHERE userID = ?";
 
     // Constructor
     public MySQLHandler(String dbName) {
@@ -258,14 +288,30 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 }, // No parameters needed
                 rs -> {
                     while (rs.next()) {
-                        groups.add(new Group(
-                                rs.getInt("groupID"),
-                                rs.getString("groupName"),
-                                rs.getInt("groupSize"),
-                                rs.getString("groupDescription"),
-                                getGroupMembers(rs.getInt("groupID"))));
+                        Group group = new Group(
+                            rs.getInt("groupID"),
+                            rs.getString("groupName"),
+                            rs.getString("groupDescription")
+                        );
+                        // Set additional properties
+                        group.setCreationDate(rs.getTimestamp("creationDate"));
+                        // Load members and their dates
+                        List<Student> members = getGroupMembers(rs.getInt("groupID"));
+                        for (Student member : members) {
+                            group.addMember(member);
+                            // Load join and end dates from the database
+                            Date joinDate = getMemberJoinDate(group.getID(), member.getID());
+                            Date endDate = getMemberEndDate(group.getID(), member.getID());
+                            if (joinDate != null) {
+                                group.setMemberJoinDate(member, joinDate);
+                            }
+                            if (endDate != null) {
+                                group.setMemberEndDate(member, endDate);
+                            }
+                        }
+                        groups.add(group);
                     }
-                    return null;
+                    return groups;
                 });
         return groups;
     }
@@ -289,14 +335,32 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     @Override
     public boolean addGroup(Group group) {
-        return executeUpdate(
+        System.out.println("\n====== MySQL Add Group Debug ======");
+        System.out.println("Input Values:");
+        System.out.println("- groupID: " + group.getID());
+        System.out.println("- groupName: " + group.getName());
+        System.out.println("- groupDescription: " + group.getDescription());
+        System.out.println("\nSQL Statement:");
+        System.out.println(SQL_INSERT_GROUP);
+        
+        try {
+            return executeUpdate(
                 SQL_INSERT_GROUP,
                 stmt -> {
+                    System.out.println("\nSetting Parameters:");
+                    System.out.println("1. Setting groupID = " + group.getID());
                     stmt.setInt(1, group.getID());
+                    System.out.println("2. Setting groupName = " + group.getName());
                     stmt.setString(2, group.getName());
-                    stmt.setInt(3, group.getSize());
-                    stmt.setString(4, group.getDescription());
+                    System.out.println("3. Setting groupDescription = " + group.getDescription());
+                    stmt.setString(3, group.getDescription());
+                    System.out.println("All parameters set successfully");
                 });
+        } catch (Exception e) {
+            System.err.println("\nUnexpected error in addGroup:");
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -508,12 +572,25 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private boolean executeUpdate(String query, PreparedStatementConsumer preparer) {
         PreparedStatement stmt = null;
         try {
+            System.out.println("\n====== MySQL Execute Update Debug ======");
+            System.out.println("Query: " + query);
             ensureConnected();
             stmt = prepareStatement(query);
+            System.out.println("Setting parameters...");
             preparer.accept(stmt);
+            System.out.println("Parameters set, executing update...");
             int result = stmt.executeUpdate();
+            System.out.println("Update complete, rows affected: " + result);
             return result > 0;
         } catch (SQLException e) {
+            System.err.println("\n====== MySQL Error Details ======");
+            System.err.println("Error Code: " + e.getErrorCode());
+            System.err.println("SQL State: " + e.getSQLState());
+            System.err.println("Message: " + e.getMessage());
+            System.err.println("\nStack Trace:");
+            e.printStackTrace();
+            System.err.println("\nQuery that caused the error:");
+            System.err.println(query);
             logError("Failed to execute update: " + e.getMessage());
             return false;
         } finally {
@@ -530,6 +607,158 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     @FunctionalInterface
     private interface ResultSetHandler<T> {
         T handle(ResultSet rs) throws SQLException;
+    }
+
+    // Add new methods for friend system
+    public boolean sendFriendRequest(int fromUserId, int toUserId) {
+        return executeUpdate(SQL_SEND_FRIEND_REQUEST,
+            stmt -> {
+                stmt.setInt(1, fromUserId);
+                stmt.setInt(2, toUserId);
+                System.out.println("Sending friend request from user " + fromUserId + " to user " + toUserId);
+            });
+    }
+
+    public boolean acceptFriendRequest(int requestId) {
+        return executeUpdate(SQL_ACCEPT_FRIEND_REQUEST,
+            stmt -> {
+                stmt.setInt(1, requestId);
+                System.out.println("Accepting friend request ID: " + requestId);
+            });
+    }
+
+    public boolean declineFriendRequest(int requestId) {
+        return executeUpdate(SQL_DECLINE_FRIEND_REQUEST,
+            stmt -> {
+                stmt.setInt(1, requestId);
+                System.out.println("Declining friend request ID: " + requestId);
+            });
+    }
+
+    public List<Student> getFriendRequests(int userId) {
+        return executeQuery(SQL_GET_FRIEND_REQUESTS,
+            stmt -> stmt.setInt(1, userId),
+            this::mapResultSetToStudentList);
+    }
+
+    public List<Student> getFriends(int userId) {
+        return executeQuery(SQL_GET_FRIENDS,
+            stmt -> {
+                stmt.setInt(1, userId);
+                stmt.setInt(2, userId);
+                stmt.setInt(3, userId);
+            },
+            this::mapResultSetToStudentList);
+    }
+
+    public boolean blockUser(int blockerId, int blockedId) {
+        return executeUpdate(SQL_BLOCK_USER,
+            stmt -> {
+                stmt.setInt(1, blockerId);
+                stmt.setInt(2, blockedId);
+                System.out.println("User " + blockerId + " blocking user " + blockedId);
+            });
+    }
+
+    public List<Student> getBlockedUsers(int userId) {
+        return executeQuery(SQL_GET_BLOCKED_USERS,
+            stmt -> stmt.setInt(1, userId),
+            this::mapResultSetToStudentList);
+    }
+
+    public boolean bookmarkPost(int userId, int postId) {
+        return executeUpdate(SQL_BOOKMARK_POST,
+            stmt -> {
+                stmt.setInt(1, userId);
+                stmt.setInt(2, postId);
+                System.out.println("User " + userId + " bookmarking post " + postId);
+            });
+    }
+
+    public List<Post> getBookmarkedPosts(int userId) {
+        return executeQuery(SQL_GET_BOOKMARKED_POSTS,
+            stmt -> stmt.setInt(1, userId),
+            this::mapResultSetToPostList);
+    }
+
+    public boolean toggleAnonymousMode(int userId, boolean isAnonymous) {
+        return executeUpdate(SQL_TOGGLE_ANONYMOUS,
+            stmt -> {
+                stmt.setBoolean(1, isAnonymous);
+                stmt.setInt(2, userId);
+                System.out.println("Toggling anonymous mode for user " + userId + " to " + isAnonymous);
+            });
+    }
+
+    // Helper method for mapping ResultSet to List<Student>
+    private List<Student> mapResultSetToStudentList(ResultSet rs) throws SQLException {
+        List<Student> students = new ArrayList<>();
+        while (rs.next()) {
+            students.add(new Student(
+                rs.getInt("userID"),
+                rs.getString("userName"),
+                rs.getString("userYear"),
+                new ArrayList<>(),  // Tags will be loaded separately if needed
+                new ArrayList<>(),  // Groups will be loaded separately if needed
+                new ArrayList<>()   // Posts will be loaded separately if needed
+            ));
+        }
+        return students;
+    }
+
+    // Helper method for mapping ResultSet to List<Post>
+    private List<Post> mapResultSetToPostList(ResultSet rs) throws SQLException {
+        List<Post> posts = new ArrayList<>();
+        while (rs.next()) {
+            posts.add(new Post(
+                rs.getInt("postID"),
+                rs.getString("postContent"),
+                getStudentById(rs.getInt("postOwner")),
+                null  // Group will be loaded separately if needed
+            ));
+        }
+        return posts;
+    }
+
+    public Student getStudentById(int userId) {
+        return executeQuery(SQL_GET_STUDENT_BY_ID,
+            stmt -> stmt.setInt(1, userId),
+            rs -> {
+                if (rs.next()) {
+                    return new Student(
+                        rs.getInt("userID"),
+                        rs.getString("userName"),
+                        rs.getString("userYear"),
+                        new ArrayList<>(),  // Tags will be loaded separately if needed
+                        new ArrayList<>(),  // Groups will be loaded separately if needed
+                        new ArrayList<>()   // Posts will be loaded separately if needed
+                    );
+                }
+                return null;
+            });
+    }
+
+    // Add helper methods for member dates
+    private Date getMemberJoinDate(int groupId, int studentId) {
+        return executeQuery(
+            "SELECT joinDate FROM group_memberships WHERE groupID = ? AND studentID = ?",
+            stmt -> {
+                stmt.setInt(1, groupId);
+                stmt.setInt(2, studentId);
+            },
+            rs -> rs.next() ? rs.getTimestamp("joinDate") : null
+        );
+    }
+
+    private Date getMemberEndDate(int groupId, int studentId) {
+        return executeQuery(
+            "SELECT endDate FROM group_memberships WHERE groupID = ? AND studentID = ?",
+            stmt -> {
+                stmt.setInt(1, groupId);
+                stmt.setInt(2, studentId);
+            },
+            rs -> rs.next() ? rs.getTimestamp("endDate") : null
+        );
     }
 
 }
