@@ -171,6 +171,10 @@ public class Student {
         }
     }
 
+    public boolean isAnonymous() {
+        return isAnonymous;
+    }
+
     public void toggleAnonymousMode() {
         this.isAnonymous = !this.isAnonymous;
     }

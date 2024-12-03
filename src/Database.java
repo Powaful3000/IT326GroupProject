@@ -60,7 +60,7 @@ public abstract class Database {
 
     public abstract boolean containsTag(Tag tag);
 
-    public abstract void createPost(Post post);
+    public abstract boolean createPost(Post post);
 
     public abstract boolean addTagToStudent(int studentId, int tagId);
 

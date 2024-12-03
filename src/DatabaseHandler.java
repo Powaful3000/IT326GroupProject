@@ -1,5 +1,6 @@
 import java.util.List;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class DatabaseHandler extends Database implements DatabaseOperations {
     private final MySQLHandler sqlHandler;
@@ -28,6 +29,11 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
         return sqlHandler.getStudentByUsername(username);
     }
 
+    public boolean updateStudent(Student student) {
+        return sqlHandler.updateStudent(student.getID(), student.getName(), student.getYear());
+    }
+
+    @Override
     public boolean updateStudent(int id, String newName, String newYear) {
         return sqlHandler.updateStudent(id, newName, newYear);
     }
@@ -83,8 +89,8 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     }
 
     @Override
-    public void createPost(Post post) {
-        sqlHandler.createPost(post);
+    public boolean createPost(Post post) {
+        return sqlHandler.createPost(post);
     }
 
     @Override
@@ -165,5 +171,25 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     @Override
     public boolean unblockUser(int blockerId, int blockedId) {
         return sqlHandler.unblockUser(blockerId, blockedId);
+    }
+
+    @Override
+    public boolean removeMemberFromGroup(int groupId, int studentId) {
+        return sqlHandler.removeMemberFromGroup(groupId, studentId);
+    }
+
+    @Override
+    public boolean deleteStudent(int studentId) {
+       return sqlHandler.deleteStudent(studentId);
+    }
+
+    @Override
+    public boolean updateStudentPassword(int studentId, String newPassword) {
+        return sqlHandler.updateStudentPassword(studentId, newPassword);
+    }
+
+    @Override
+    public List<Post> getGroupPosts(int groupId) {
+        return sqlHandler.getGroupPosts(groupId);
     }
 }

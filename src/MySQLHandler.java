@@ -101,6 +101,26 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_GET_STUDENT_BY_ID = 
         "SELECT * FROM students WHERE userID = ?";
 
+    // Add these with the other SQL constants at the top of the class
+    private static final String SQL_REMOVE_FRIEND = 
+        "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+    
+    private static final String SQL_UNBLOCK_USER = 
+        "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+    
+    private static final String SQL_REMOVE_GROUP_MEMBER = 
+        "DELETE FROM group_memberships WHERE groupID = ? AND studentID = ?";
+
+    private static final String SQL_GET_MEMBER_JOIN_DATE = 
+        "SELECT joinDate FROM group_memberships WHERE groupID = ? AND studentID = ?";
+
+    private static final String SQL_GET_MEMBER_END_DATE = 
+        "SELECT endDate FROM group_memberships WHERE groupID = ? AND studentID = ?";
+
+    // Add this SQL constant at the top with other constants
+    private static final String SQL_UPDATE_STUDENT_PASSWORD = 
+        "UPDATE students SET password = ? WHERE student_id = ?";
+
     // Constructor
     public MySQLHandler(String dbName) {
         super(dbName);
@@ -196,15 +216,21 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     }
 
     // Method to add a post to the database
-    public void createPost(Post post) {
-        executeUpdate(
-                SQL_INSERT_POST,
-                stmt -> {
-                    stmt.setInt(1, post.getID());
-                    stmt.setString(2, post.getContent());
-                    stmt.setInt(3, post.getOwner().getID());
-                    System.out.println("Post created: " + post.getContent());
-                });
+    @Override
+    public boolean createPost(Post post) {
+        try {
+            String query = "INSERT INTO posts (id, content, owner_id) VALUES (?, ?, ?)";
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setInt(1, post.getID());
+                stmt.setString(2, post.getContent());
+                stmt.setInt(3, post.getOwner().getID());
+                stmt.executeUpdate();
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error creating post: " + e.getMessage());
+            return false;
+        }
     }
 
     // Method to remove a post from the database
@@ -283,36 +309,49 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     public List<Group> getAllGroups() {
         List<Group> groups = new ArrayList<>();
         executeQuery(
-                SQL_SELECT_ALL_GROUPS,
-                stmt -> {
-                }, // No parameters needed
-                rs -> {
-                    while (rs.next()) {
-                        Group group = new Group(
-                            rs.getInt("groupID"),
-                            rs.getString("groupName"),
-                            rs.getString("groupDescription")
-                        );
-                        // Set additional properties
-                        group.setCreationDate(rs.getTimestamp("creationDate"));
-                        // Load members and their dates
-                        List<Student> members = getGroupMembers(rs.getInt("groupID"));
-                        for (Student member : members) {
-                            group.addMember(member);
-                            // Load join and end dates from the database
-                            Date joinDate = getMemberJoinDate(group.getID(), member.getID());
-                            Date endDate = getMemberEndDate(group.getID(), member.getID());
-                            if (joinDate != null) {
-                                group.setMemberJoinDate(member, joinDate);
+            SQL_SELECT_ALL_GROUPS,
+            stmt -> {}, // No parameters needed
+            rs -> {
+                while (rs.next()) {
+                    Group group = new Group(
+                        rs.getInt("groupID"),
+                        rs.getString("groupName"),
+                        rs.getString("groupDescription")
+                    );
+                    // Set additional properties
+                    group.setCreationDate(rs.getTimestamp("creationDate"));
+                    
+                    // Load members for this group
+                    executeQuery(
+                        SQL_SELECT_GROUP_MEMBERS_DETAILED,
+                        memberStmt -> memberStmt.setInt(1, group.getID()),
+                        memberRs -> {
+                            while (memberRs.next()) {
+                                Student member = new Student(
+                                    memberRs.getInt("userID"),
+                                    memberRs.getString("userName"),
+                                    memberRs.getString("userYear"),
+                                    null, null, null
+                                );
+                                group.addMember(member);
+                                
+                                // Load join and end dates
+                                Date joinDate = getMemberJoinDate(group.getID(), member.getID());
+                                Date endDate = getMemberEndDate(group.getID(), member.getID());
+                                if (joinDate != null) {
+                                    group.setMemberJoinDate(member, joinDate);
+                                }
+                                if (endDate != null) {
+                                    group.setMemberEndDate(member, endDate);
+                                }
                             }
-                            if (endDate != null) {
-                                group.setMemberEndDate(member, endDate);
-                            }
+                            return null;
                         }
-                        groups.add(group);
-                    }
-                    return groups;
-                });
+                    );
+                    groups.add(group);
+                }
+                return groups;
+            });
         return groups;
     }
 
@@ -741,7 +780,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     // Add helper methods for member dates
     private Date getMemberJoinDate(int groupId, int studentId) {
         return executeQuery(
-            "SELECT joinDate FROM group_memberships WHERE groupID = ? AND studentID = ?",
+            SQL_GET_MEMBER_JOIN_DATE,
             stmt -> {
                 stmt.setInt(1, groupId);
                 stmt.setInt(2, studentId);
@@ -752,7 +791,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     private Date getMemberEndDate(int groupId, int studentId) {
         return executeQuery(
-            "SELECT endDate FROM group_memberships WHERE groupID = ? AND studentID = ?",
+            SQL_GET_MEMBER_END_DATE,
             stmt -> {
                 stmt.setInt(1, groupId);
                 stmt.setInt(2, studentId);
@@ -762,29 +801,64 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     }
 
     public boolean removeFriend(int userId, int friendId) {
-        String query = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
-        try (PreparedStatement stmt = prepareStatement(query)) {
-            stmt.setInt(1, userId);
-            stmt.setInt(2, friendId);
-            stmt.setInt(3, friendId);
-            stmt.setInt(4, userId);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error removing friend: " + e.getMessage());
-            return false;
-        }
+        return executeUpdate(
+            SQL_REMOVE_FRIEND,
+            stmt -> {
+                stmt.setInt(1, userId);
+                stmt.setInt(2, friendId);
+                stmt.setInt(3, friendId);
+                stmt.setInt(4, userId);
+                System.out.println("Removing friendship between users " + userId + " and " + friendId);
+            });
     }
 
     public boolean unblockUser(int blockerId, int blockedId) {
-        String query = "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
-        try (PreparedStatement stmt = prepareStatement(query)) {
-            stmt.setInt(1, blockerId);
-            stmt.setInt(2, blockedId);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error unblocking user: " + e.getMessage());
-            return false;
-        }
+        return executeUpdate(
+            SQL_UNBLOCK_USER,
+            stmt -> {
+                stmt.setInt(1, blockerId);
+                stmt.setInt(2, blockedId);
+                System.out.println("Unblocking user " + blockedId + " for blocker " + blockerId);
+            });
+    }
+
+    public boolean removeMemberFromGroup(int groupId, int studentId) {
+        return executeUpdate(
+            SQL_REMOVE_GROUP_MEMBER,
+            stmt -> {
+                stmt.setInt(1, groupId);
+                stmt.setInt(2, studentId);
+                System.out.println("Removing member " + studentId + " from group " + groupId);
+            });
+    }
+
+    public boolean deleteStudent(int studentId) {
+        return executeUpdate(
+            SQL_DELETE_STUDENT,
+            stmt -> {
+            stmt.setInt(1, studentId);
+                System.out.println("Deleting student with ID: " + studentId);
+            });
+    }
+
+    // Add this method to the class
+    public boolean updateStudentPassword(int studentId, String newPassword) {
+        return executeUpdate(
+            SQL_UPDATE_STUDENT_PASSWORD,
+            stmt -> {
+                stmt.setString(1, hashPassword(newPassword));
+                stmt.setInt(2, studentId);
+                System.out.println("Updating password for student ID: " + studentId);
+            });
+    }
+
+    @Override
+    public List<Post> getGroupPosts(int groupId) {
+        return executeQuery(
+            "SELECT p.* FROM posts p JOIN post_groups pg ON p.id = pg.post_id WHERE pg.group_id = ?",
+            stmt -> stmt.setInt(1, groupId),
+            this::mapResultSetToPostList
+        );
     }
 
 }

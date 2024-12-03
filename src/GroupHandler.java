@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GroupHandler {
 
@@ -12,7 +13,17 @@ public class GroupHandler {
     }
 
     public List<Group> getAllGroups() {
-        return dbHandler.getAllGroups();
+        System.out.println("\n====== GroupHandler getAllGroups Debug ======");
+        List<Group> groups = dbHandler.getAllGroups();
+        System.out.println("Retrieved " + groups.size() + " groups from database");
+        for (Group group : groups) {
+            System.out.println("\nGroup: " + group.getName());
+            System.out.println("Members: " + group.getMembers().size());
+            System.out.println("Member details: " + group.getMembers().stream()
+                .map(s -> s.getName() + "(ID:" + s.getID() + ")")
+                .collect(Collectors.joining(", ")));
+        }
+        return groups;
     }
 
     private int generateUniqueGroupId() {
@@ -93,5 +104,12 @@ public class GroupHandler {
                 .filter(group -> group.getID() == groupId)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public Group getGroupByID(int groupID) {
+        return getAllGroups().stream()
+            .filter(group -> group.getID() == groupID)
+            .findFirst()
+            .orElse(null);
     }
 }
