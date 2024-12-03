@@ -66,89 +66,71 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_UPDATE_MEMBERSHIP_END_DATE = "UPDATE " + TABLE_MEMBERSHIPS
             + " SET endDate = ? WHERE studentID = ? AND groupID = ?";
     private static final String SQL_UPDATE_POST = "UPDATE " + TABLE_POSTS + " SET postContent = ? WHERE postID = ?";
-    private static final String SQL_UPDATE_GROUP_END_DATE = "UPDATE " + TABLE_MEMBERSHIPS + 
+    private static final String SQL_UPDATE_GROUP_END_DATE = "UPDATE " + TABLE_MEMBERSHIPS +
             " SET endDate = CURRENT_TIMESTAMP " +
             "WHERE studentID = ? AND groupID = ? AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
-    private static final String SQL_LEAVE_GROUP = 
-        "DELETE FROM " + TABLE_MEMBERSHIPS + " WHERE studentID = ? AND groupID = ?";
+    private static final String SQL_LEAVE_GROUP = "DELETE FROM " + TABLE_MEMBERSHIPS
+            + " WHERE studentID = ? AND groupID = ?";
     private static final String SQL_CHECK_TAG_EXISTS = "SELECT COUNT(*) FROM " + TABLE_TAGS
             + " WHERE name = ? AND description = ?";
 
     // New SQL constants for friend system
-    private static final String SQL_SEND_FRIEND_REQUEST = 
-        "INSERT INTO friend_requests (fromUserID, toUserID) VALUES (?, ?)";
-    private static final String SQL_ACCEPT_FRIEND_REQUEST = 
-        "UPDATE friend_requests SET status = 'ACCEPTED' WHERE requestID = ?";
-    private static final String SQL_DECLINE_FRIEND_REQUEST = 
-        "UPDATE friend_requests SET status = 'DECLINED' WHERE requestID = ?";
-    private static final String SQL_GET_FRIEND_REQUESTS = 
-        "SELECT s.* FROM students s JOIN friend_requests fr ON s.userID = fr.fromUserID " +
-        "WHERE fr.toUserID = ? AND fr.status = 'PENDING'";
-    private static final String SQL_GET_FRIENDS = 
-        "SELECT s.* FROM students s JOIN friends f ON (s.userID = f.userID2 OR s.userID = f.userID1) " +
-        "WHERE (f.userID1 = ? OR f.userID2 = ?) AND s.userID != ?";
-    
+    private static final String SQL_SEND_FRIEND_REQUEST = "INSERT INTO friend_requests (fromUserID, toUserID) VALUES (?, ?)";
+    private static final String SQL_ACCEPT_FRIEND_REQUEST = "UPDATE friend_requests SET status = 'ACCEPTED' WHERE requestID = ?";
+    private static final String SQL_DECLINE_FRIEND_REQUEST = "UPDATE friend_requests SET status = 'DECLINED' WHERE requestID = ?";
+    private static final String SQL_GET_FRIEND_REQUESTS = "SELECT s.* FROM students s JOIN friend_requests fr ON s.userID = fr.fromUserID "
+            +
+            "WHERE fr.toUserID = ? AND fr.status = 'PENDING'";
+    private static final String SQL_GET_FRIENDS = "SELECT s.* FROM students s JOIN friends f ON (s.userID = f.userID2 OR s.userID = f.userID1) "
+            +
+            "WHERE (f.userID1 = ? OR f.userID2 = ?) AND s.userID != ?";
+
     // SQL constants for blocking system
-    private static final String SQL_BLOCK_USER = 
-        "INSERT INTO blocked_users (blockerID, blockedID) VALUES (?, ?)";
-    private static final String SQL_GET_BLOCKED_USERS = 
-        "SELECT s.* FROM students s JOIN blocked_users b ON s.userID = b.blockedID WHERE b.blockerID = ?";
-    
+    private static final String SQL_BLOCK_USER = "INSERT INTO blocked_users (blockerID, blockedID) VALUES (?, ?)";
+    private static final String SQL_GET_BLOCKED_USERS = "SELECT s.* FROM students s JOIN blocked_users b ON s.userID = b.blockedID WHERE b.blockerID = ?";
+
     // SQL constants for bookmarks and anonymous mode
-    private static final String SQL_BOOKMARK_POST = 
-        "INSERT INTO bookmarked_posts (userID, postID) VALUES (?, ?)";
-    private static final String SQL_GET_BOOKMARKED_POSTS = 
-        "SELECT p.* FROM posts p JOIN bookmarked_posts bp ON p.postID = bp.postID WHERE bp.userID = ?";
-    private static final String SQL_TOGGLE_ANONYMOUS = 
-        "UPDATE students SET isAnonymous = ? WHERE userID = ?";
-    private static final String SQL_GET_STUDENT_BY_ID = 
-        "SELECT * FROM students WHERE userID = ?";
+    private static final String SQL_BOOKMARK_POST = "INSERT INTO bookmarked_posts (userID, postID) VALUES (?, ?)";
+    private static final String SQL_GET_BOOKMARKED_POSTS = "SELECT p.* FROM posts p JOIN bookmarked_posts bp ON p.postID = bp.postID WHERE bp.userID = ?";
+    private static final String SQL_TOGGLE_ANONYMOUS = "UPDATE students SET isAnonymous = ? WHERE userID = ?";
+    private static final String SQL_GET_STUDENT_BY_ID = "SELECT * FROM students WHERE userID = ?";
 
     // Add these with the other SQL constants at the top of the class
-    private static final String SQL_REMOVE_FRIEND = 
-        "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
-    
-    private static final String SQL_UNBLOCK_USER = 
-        "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
-    
-    private static final String SQL_REMOVE_GROUP_MEMBER = 
-        "DELETE FROM group_memberships WHERE groupID = ? AND studentID = ?";
+    private static final String SQL_REMOVE_FRIEND = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
 
-    private static final String SQL_GET_MEMBER_JOIN_DATE = 
-        "SELECT joinDate FROM group_memberships WHERE groupID = ? AND studentID = ?";
+    private static final String SQL_UNBLOCK_USER = "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
 
-    private static final String SQL_GET_MEMBER_END_DATE = 
-        "SELECT endDate FROM group_memberships WHERE groupID = ? AND studentID = ?";
+    private static final String SQL_REMOVE_GROUP_MEMBER = "DELETE FROM group_memberships WHERE groupID = ? AND studentID = ?";
+
+    private static final String SQL_GET_MEMBER_JOIN_DATE = "SELECT joinDate FROM group_memberships WHERE groupID = ? AND studentID = ?";
+
+    private static final String SQL_GET_MEMBER_END_DATE = "SELECT endDate FROM group_memberships WHERE groupID = ? AND studentID = ?";
 
     // Add this SQL constant at the top with other constants
-    private static final String SQL_UPDATE_STUDENT_PASSWORD = 
-        "UPDATE students SET password = ? WHERE student_id = ?";
+    private static final String SQL_UPDATE_STUDENT_PASSWORD = "UPDATE students SET password = ? WHERE student_id = ?";
 
     // Add this with the other SQL constants at the top of the class
-    private static final String SQL_ADD_GROUP_MEMBER = 
-        "INSERT INTO " + TABLE_MEMBERSHIPS + " (groupID, studentID, joinDate) VALUES (?, ?, ?)";
+    private static final String SQL_ADD_GROUP_MEMBER = "INSERT INTO " + TABLE_MEMBERSHIPS
+            + " (groupID, studentID, joinDate) VALUES (?, ?, ?)";
 
-    private static final String SQL_CHECK_GROUP_MEMBERSHIP = 
-        "SELECT COUNT(*) FROM group_memberships WHERE studentID = ? AND groupID = ? " +
-        "AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
+    private static final String SQL_CHECK_GROUP_MEMBERSHIP = "SELECT COUNT(*) FROM group_memberships WHERE studentID = ? AND groupID = ? "
+            +
+            "AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
 
-    private static final String SQL_JOIN_GROUP = 
-        "INSERT INTO " + TABLE_MEMBERSHIPS + " (studentID, groupID, joinDate) VALUES (?, ?, CURRENT_TIMESTAMP)";
+    private static final String SQL_JOIN_GROUP = "INSERT INTO " + TABLE_MEMBERSHIPS
+            + " (studentID, groupID, joinDate) VALUES (?, ?, CURRENT_TIMESTAMP)";
 
-    private static final String SQL_GET_GROUP_POSTS = 
-        "SELECT p.* FROM posts p JOIN post_groups pg ON p.id = pg.post_id WHERE pg.group_id = ?";
+    private static final String SQL_GET_GROUP_POSTS = "SELECT p.* FROM posts p JOIN post_groups pg ON p.id = pg.post_id WHERE pg.group_id = ?";
 
     // Add with other SQL constants at the top
-    private static final String SQL_FIND_GROUP_BY_NAME = 
-        "SELECT * FROM " + TABLE_GROUPS + " WHERE groupName = ?";
+    private static final String SQL_FIND_GROUP_BY_NAME = "SELECT * FROM " + TABLE_GROUPS + " WHERE groupName = ?";
 
     // Add with other SQL constants
-    private static final String SQL_CHECK_GROUP_EXISTS = 
-        "SELECT COUNT(*) FROM " + TABLE_GROUPS + " WHERE groupName = ?";
+    private static final String SQL_CHECK_GROUP_EXISTS = "SELECT COUNT(*) FROM " + TABLE_GROUPS
+            + " WHERE groupName = ?";
 
     // Add this constant with other SQL constants
-    private static final String SQL_GET_MAX_GROUP_ID = 
-        "SELECT MAX(groupID) FROM " + TABLE_GROUPS;
+    private static final String SQL_GET_MAX_GROUP_ID = "SELECT MAX(groupID) FROM " + TABLE_GROUPS;
 
     // Constructor
     public MySQLHandler(String dbName) {
@@ -163,10 +145,11 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         if (!isConnected) {
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
-                String url = "jdbc:mysql://localhost:3306/" + dbName + "?useSSL=false&allowPublicKeyRetrieval=true";
-                String username = "MySQLUser";
-                String password = "MySQLPassword";
-                connection = DriverManager.getConnection(url, username, password);
+                connection = DriverManager.getConnection(
+                    DatabaseConfig.getConnectionUrl(),
+                    DatabaseConfig.DB_USER,
+                    DatabaseConfig.DB_PASSWORD
+                );
                 isConnected = true;
                 System.out.println("Connected to MySQL database: " + dbName);
             } catch (ClassNotFoundException | SQLException e) {
@@ -338,49 +321,47 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     public List<Group> getAllGroups() {
         List<Group> groups = new ArrayList<>();
         executeQuery(
-            SQL_SELECT_ALL_GROUPS,
-            stmt -> {}, // No parameters needed
-            rs -> {
-                while (rs.next()) {
-                    Group group = new Group(
-                        rs.getInt("groupID"),
-                        rs.getString("groupName"),
-                        rs.getString("groupDescription")
-                    );
-                    // Set additional properties
-                    group.setCreationDate(rs.getTimestamp("creationDate"));
-                    
-                    // Load members for this group
-                    executeQuery(
-                        SQL_SELECT_GROUP_MEMBERS_DETAILED,
-                        memberStmt -> memberStmt.setInt(1, group.getID()),
-                        memberRs -> {
-                            while (memberRs.next()) {
-                                Student member = new Student(
-                                    memberRs.getInt("userID"),
-                                    memberRs.getString("userName"),
-                                    memberRs.getString("userYear"),
-                                    null, null, null
-                                );
-                                group.addMember(member);
-                                
-                                // Load join and end dates
-                                Date joinDate = getMemberJoinDate(group.getID(), member.getID());
-                                Date endDate = getMemberEndDate(group.getID(), member.getID());
-                                if (joinDate != null) {
-                                    group.setMemberJoinDate(member, joinDate);
-                                }
-                                if (endDate != null) {
-                                    group.setMemberEndDate(member, endDate);
-                                }
-                            }
-                            return null;
-                        }
-                    );
-                    groups.add(group);
-                }
-                return groups;
-            });
+                SQL_SELECT_ALL_GROUPS,
+                stmt -> {
+                }, // No parameters needed
+                rs -> {
+                    while (rs.next()) {
+                        Group group = new Group(
+                                rs.getInt("groupID"),
+                                rs.getString("groupName"),
+                                rs.getString("groupDescription"));
+                        // Set additional properties
+                        group.setCreationDate(rs.getTimestamp("creationDate"));
+
+                        // Load members for this group
+                        executeQuery(
+                                SQL_SELECT_GROUP_MEMBERS_DETAILED,
+                                memberStmt -> memberStmt.setInt(1, group.getID()),
+                                memberRs -> {
+                                    while (memberRs.next()) {
+                                        Student member = new Student(
+                                                memberRs.getInt("userID"),
+                                                memberRs.getString("userName"),
+                                                memberRs.getString("userYear"),
+                                                null, null, null);
+                                        group.addMember(member);
+
+                                        // Load join and end dates
+                                        Date joinDate = getMemberJoinDate(group.getID(), member.getID());
+                                        Date endDate = getMemberEndDate(group.getID(), member.getID());
+                                        if (joinDate != null) {
+                                            group.setMemberJoinDate(member, joinDate);
+                                        }
+                                        if (endDate != null) {
+                                            group.setMemberEndDate(member, endDate);
+                                        }
+                                    }
+                                    return null;
+                                });
+                        groups.add(group);
+                    }
+                    return groups;
+                });
         return groups;
     }
 
@@ -403,9 +384,9 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     private int generateUniqueGroupId() {
         return executeQuery(SQL_GET_MAX_GROUP_ID,
-            stmt -> {},
-            rs -> rs.next() ? rs.getInt(1) + 1 : 1
-        );
+                stmt -> {
+                },
+                rs -> rs.next() ? rs.getInt(1) + 1 : 1);
     }
 
     @Override
@@ -420,19 +401,18 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         group.setID(newId);
 
         return executeUpdate(SQL_INSERT_GROUP,
-            stmt -> {
-                stmt.setInt(1, group.getID());
-                stmt.setString(2, group.getName());
-                stmt.setString(3, group.getDescription());
-                System.out.println("Adding new group: " + group.getName());
-            });
+                stmt -> {
+                    stmt.setInt(1, group.getID());
+                    stmt.setString(2, group.getName());
+                    stmt.setString(3, group.getDescription());
+                    System.out.println("Adding new group: " + group.getName());
+                });
     }
 
     private boolean doesGroupExist(String groupName) {
         return executeQuery(SQL_CHECK_GROUP_EXISTS,
-            stmt -> stmt.setString(1, groupName),
-            rs -> rs.next() && rs.getInt(1) > 0
-        );
+                stmt -> stmt.setString(1, groupName),
+                rs -> rs.next() && rs.getInt(1) > 0);
     }
 
     @Override
@@ -444,13 +424,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         }
 
         return executeUpdate(
-            SQL_ADD_GROUP_MEMBER,
-            stmt -> {
-                stmt.setInt(1, groupId);
-                stmt.setInt(2, studentId);
-                stmt.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));
-                System.out.println("Adding member " + studentId + " to group " + groupId);
-            });
+                SQL_ADD_GROUP_MEMBER,
+                stmt -> {
+                    stmt.setInt(1, groupId);
+                    stmt.setInt(2, studentId);
+                    stmt.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));
+                    System.out.println("Adding member " + studentId + " to group " + groupId);
+                });
     }
 
     private void updateGroupSize(int groupId) {
@@ -691,82 +671,82 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     // Add new methods for friend system
     public boolean sendFriendRequest(int fromUserId, int toUserId) {
         return executeUpdate(SQL_SEND_FRIEND_REQUEST,
-            stmt -> {
-                stmt.setInt(1, fromUserId);
-                stmt.setInt(2, toUserId);
-                System.out.println("Sending friend request from user " + fromUserId + " to user " + toUserId);
-            });
+                stmt -> {
+                    stmt.setInt(1, fromUserId);
+                    stmt.setInt(2, toUserId);
+                    System.out.println("Sending friend request from user " + fromUserId + " to user " + toUserId);
+                });
     }
 
     public boolean acceptFriendRequest(int requestId) {
         return executeUpdate(SQL_ACCEPT_FRIEND_REQUEST,
-            stmt -> {
-                stmt.setInt(1, requestId);
-                System.out.println("Accepting friend request ID: " + requestId);
-            });
+                stmt -> {
+                    stmt.setInt(1, requestId);
+                    System.out.println("Accepting friend request ID: " + requestId);
+                });
     }
 
     public boolean declineFriendRequest(int requestId) {
         return executeUpdate(SQL_DECLINE_FRIEND_REQUEST,
-            stmt -> {
-                stmt.setInt(1, requestId);
-                System.out.println("Declining friend request ID: " + requestId);
-            });
+                stmt -> {
+                    stmt.setInt(1, requestId);
+                    System.out.println("Declining friend request ID: " + requestId);
+                });
     }
 
     public List<Student> getFriendRequests(int userId) {
         return executeQuery(SQL_GET_FRIEND_REQUESTS,
-            stmt -> stmt.setInt(1, userId),
-            this::mapResultSetToStudentList);
+                stmt -> stmt.setInt(1, userId),
+                this::mapResultSetToStudentList);
     }
 
     public List<Student> getFriends(int userId) {
         return executeQuery(SQL_GET_FRIENDS,
-            stmt -> {
-                stmt.setInt(1, userId);
-                stmt.setInt(2, userId);
-                stmt.setInt(3, userId);
-            },
-            this::mapResultSetToStudentList);
+                stmt -> {
+                    stmt.setInt(1, userId);
+                    stmt.setInt(2, userId);
+                    stmt.setInt(3, userId);
+                },
+                this::mapResultSetToStudentList);
     }
 
     public boolean blockUser(int blockerId, int blockedId) {
         return executeUpdate(SQL_BLOCK_USER,
-            stmt -> {
-                stmt.setInt(1, blockerId);
-                stmt.setInt(2, blockedId);
-                System.out.println("User " + blockerId + " blocking user " + blockedId);
-            });
+                stmt -> {
+                    stmt.setInt(1, blockerId);
+                    stmt.setInt(2, blockedId);
+                    System.out.println("User " + blockerId + " blocking user " + blockedId);
+                });
     }
 
     public List<Student> getBlockedUsers(int userId) {
         return executeQuery(SQL_GET_BLOCKED_USERS,
-            stmt -> stmt.setInt(1, userId),
-            this::mapResultSetToStudentList);
+                stmt -> stmt.setInt(1, userId),
+                this::mapResultSetToStudentList);
     }
 
     public boolean bookmarkPost(int userId, int postId) {
         return executeUpdate(SQL_BOOKMARK_POST,
-            stmt -> {
-                stmt.setInt(1, userId);
-                stmt.setInt(2, postId);
-                System.out.println("User " + userId + " bookmarking post " + postId);
-            });
+                stmt -> {
+                    stmt.setInt(1, userId);
+                    stmt.setInt(2, postId);
+                    System.out.println("User " + userId + " bookmarking post " + postId);
+                });
     }
 
     public List<Post> getBookmarkedPosts(int userId) {
         return executeQuery(SQL_GET_BOOKMARKED_POSTS,
-            stmt -> stmt.setInt(1, userId),
-            this::mapResultSetToPostList);
+                stmt -> stmt.setInt(1, userId),
+                this::mapResultSetToPostList);
     }
 
     public boolean toggleAnonymousMode(int userId, boolean isAnonymous) {
         return executeUpdate(SQL_TOGGLE_ANONYMOUS,
-            stmt -> {
-                stmt.setBoolean(1, isAnonymous);
-                stmt.setInt(2, userId);
-                System.out.println("Toggling anonymous mode for user " + userId + " to " + isAnonymous);
-            });
+                stmt -> {
+                    stmt.setBoolean(1, isAnonymous);
+                    stmt.setInt(2, userId);
+                    System.out.println("Toggling anonymous mode for user " + userId + " to " + isAnonymous);
+                });
     }
 
     // Helper method for mapping ResultSet to List<Student>
@@ -774,12 +754,12 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         List<Student> students = new ArrayList<>();
         while (rs.next()) {
             students.add(new Student(
-                rs.getInt("userID"),
-                rs.getString("userName"),
-                rs.getString("userYear"),
-                new ArrayList<>(),  // Tags will be loaded separately if needed
-                new ArrayList<>(),  // Groups will be loaded separately if needed
-                new ArrayList<>()   // Posts will be loaded separately if needed
+                    rs.getInt("userID"),
+                    rs.getString("userName"),
+                    rs.getString("userYear"),
+                    new ArrayList<>(), // Tags will be loaded separately if needed
+                    new ArrayList<>(), // Groups will be loaded separately if needed
+                    new ArrayList<>() // Posts will be loaded separately if needed
             ));
         }
         return students;
@@ -790,10 +770,10 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         List<Post> posts = new ArrayList<>();
         while (rs.next()) {
             posts.add(new Post(
-                rs.getInt("postID"),
-                rs.getString("postContent"),
-                getStudentById(rs.getInt("postOwner")),
-                null  // Group will be loaded separately if needed
+                    rs.getInt("postID"),
+                    rs.getString("postContent"),
+                    getStudentById(rs.getInt("postOwner")),
+                    null // Group will be loaded separately if needed
             ));
         }
         return posts;
@@ -801,147 +781,140 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     public Student getStudentById(int userId) {
         return executeQuery(SQL_GET_STUDENT_BY_ID,
-            stmt -> stmt.setInt(1, userId),
-            rs -> {
-                if (rs.next()) {
-                    return new Student(
-                        rs.getInt("userID"),
-                        rs.getString("userName"),
-                        rs.getString("userYear"),
-                        new ArrayList<>(),  // Tags will be loaded separately if needed
-                        new ArrayList<>(),  // Groups will be loaded separately if needed
-                        new ArrayList<>()   // Posts will be loaded separately if needed
-                    );
-                }
-                return null;
-            });
+                stmt -> stmt.setInt(1, userId),
+                rs -> {
+                    if (rs.next()) {
+                        return new Student(
+                                rs.getInt("userID"),
+                                rs.getString("userName"),
+                                rs.getString("userYear"),
+                                new ArrayList<>(), // Tags will be loaded separately if needed
+                                new ArrayList<>(), // Groups will be loaded separately if needed
+                                new ArrayList<>() // Posts will be loaded separately if needed
+                        );
+                    }
+                    return null;
+                });
     }
 
     // Add helper methods for member dates
     private Date getMemberJoinDate(int groupId, int studentId) {
         return executeQuery(
-            SQL_GET_MEMBER_JOIN_DATE,
-            stmt -> {
-                stmt.setInt(1, groupId);
-                stmt.setInt(2, studentId);
-            },
-            rs -> rs.next() ? rs.getTimestamp("joinDate") : null
-        );
+                SQL_GET_MEMBER_JOIN_DATE,
+                stmt -> {
+                    stmt.setInt(1, groupId);
+                    stmt.setInt(2, studentId);
+                },
+                rs -> rs.next() ? rs.getTimestamp("joinDate") : null);
     }
 
     private Date getMemberEndDate(int groupId, int studentId) {
         return executeQuery(
-            SQL_GET_MEMBER_END_DATE,
-            stmt -> {
-                stmt.setInt(1, groupId);
-                stmt.setInt(2, studentId);
-            },
-            rs -> rs.next() ? rs.getTimestamp("endDate") : null
-        );
+                SQL_GET_MEMBER_END_DATE,
+                stmt -> {
+                    stmt.setInt(1, groupId);
+                    stmt.setInt(2, studentId);
+                },
+                rs -> rs.next() ? rs.getTimestamp("endDate") : null);
     }
 
     public boolean removeFriend(int userId, int friendId) {
         return executeUpdate(
-            SQL_REMOVE_FRIEND,
-            stmt -> {
-                stmt.setInt(1, userId);
-                stmt.setInt(2, friendId);
-                stmt.setInt(3, friendId);
-                stmt.setInt(4, userId);
-                System.out.println("Removing friendship between users " + userId + " and " + friendId);
-            });
+                SQL_REMOVE_FRIEND,
+                stmt -> {
+                    stmt.setInt(1, userId);
+                    stmt.setInt(2, friendId);
+                    stmt.setInt(3, friendId);
+                    stmt.setInt(4, userId);
+                    System.out.println("Removing friendship between users " + userId + " and " + friendId);
+                });
     }
 
     public boolean unblockUser(int blockerId, int blockedId) {
         return executeUpdate(
-            SQL_UNBLOCK_USER,
-            stmt -> {
-                stmt.setInt(1, blockerId);
-                stmt.setInt(2, blockedId);
-                System.out.println("Unblocking user " + blockedId + " for blocker " + blockerId);
-            });
+                SQL_UNBLOCK_USER,
+                stmt -> {
+                    stmt.setInt(1, blockerId);
+                    stmt.setInt(2, blockedId);
+                    System.out.println("Unblocking user " + blockedId + " for blocker " + blockerId);
+                });
     }
 
     public boolean removeMemberFromGroup(int groupId, int studentId) {
         return executeUpdate(
-            SQL_REMOVE_GROUP_MEMBER,
-            stmt -> {
-                stmt.setInt(1, groupId);
-                stmt.setInt(2, studentId);
-                System.out.println("Removing member " + studentId + " from group " + groupId);
-            });
+                SQL_REMOVE_GROUP_MEMBER,
+                stmt -> {
+                    stmt.setInt(1, groupId);
+                    stmt.setInt(2, studentId);
+                    System.out.println("Removing member " + studentId + " from group " + groupId);
+                });
     }
 
     public boolean deleteStudent(int studentId) {
         return executeUpdate(
-            SQL_DELETE_STUDENT,
-            stmt -> {
-            stmt.setInt(1, studentId);
-                System.out.println("Deleting student with ID: " + studentId);
-            });
+                SQL_DELETE_STUDENT,
+                stmt -> {
+                    stmt.setInt(1, studentId);
+                    System.out.println("Deleting student with ID: " + studentId);
+                });
     }
 
     // Add this method to the class
     public boolean updateStudentPassword(int studentId, String newPassword) {
         return executeUpdate(
-            SQL_UPDATE_STUDENT_PASSWORD,
-            stmt -> {
-                stmt.setString(1, hashPassword(newPassword));
-                stmt.setInt(2, studentId);
-                System.out.println("Updating password for student ID: " + studentId);
-            });
+                SQL_UPDATE_STUDENT_PASSWORD,
+                stmt -> {
+                    stmt.setString(1, hashPassword(newPassword));
+                    stmt.setInt(2, studentId);
+                    System.out.println("Updating password for student ID: " + studentId);
+                });
     }
 
     @Override
     public List<Post> getGroupPosts(int groupId) {
         return executeQuery(SQL_GET_GROUP_POSTS,
-            stmt -> stmt.setInt(1, groupId),
-            this::mapResultSetToPostList
-        );
+                stmt -> stmt.setInt(1, groupId),
+                this::mapResultSetToPostList);
     }
 
     @Override
     public boolean isStudentInGroup(int studentId, int groupId) {
         return executeQuery(SQL_CHECK_GROUP_MEMBERSHIP,
-            stmt -> {
-                stmt.setInt(1, studentId);
-                stmt.setInt(2, groupId);
-            },
-            rs -> rs.next() && rs.getInt(1) > 0
-        );
+                stmt -> {
+                    stmt.setInt(1, studentId);
+                    stmt.setInt(2, groupId);
+                },
+                rs -> rs.next() && rs.getInt(1) > 0);
     }
 
     @Override
     public boolean joinGroup(int studentId, int groupId) {
         return executeUpdate(SQL_JOIN_GROUP,
-            stmt -> {
-                stmt.setInt(1, studentId);
-                stmt.setInt(2, groupId);
-                System.out.println("Adding student " + studentId + " to group " + groupId);
-            }
-        );
+                stmt -> {
+                    stmt.setInt(1, studentId);
+                    stmt.setInt(2, groupId);
+                    System.out.println("Adding student " + studentId + " to group " + groupId);
+                });
     }
 
     @Override
     public boolean leaveGroup(int studentId, int groupId) {
         return executeUpdate(SQL_LEAVE_GROUP,
-            stmt -> {
-                stmt.setInt(1, studentId);
-                stmt.setInt(2, groupId);
-                System.out.println("Removing student " + studentId + " from group " + groupId);
-            }
-        );
+                stmt -> {
+                    stmt.setInt(1, studentId);
+                    stmt.setInt(2, groupId);
+                    System.out.println("Removing student " + studentId + " from group " + groupId);
+                });
     }
-@Override
+
+    @Override
     public Group findGroupByName(String groupName) {
         return executeQuery(SQL_FIND_GROUP_BY_NAME,
-            stmt -> stmt.setString(1, groupName),
-            rs -> rs.next() ? new Group(
-                rs.getInt("groupID"),
-                rs.getString("groupName"),
-                rs.getString("groupDescription")
-            ) : null
-        );
+                stmt -> stmt.setString(1, groupName),
+                rs -> rs.next() ? new Group(
+                        rs.getInt("groupID"),
+                        rs.getString("groupName"),
+                        rs.getString("groupDescription")) : null);
     }
 
 }

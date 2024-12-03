@@ -62,4 +62,4 @@ public class PanelManager {
             cardLayout.show(mainPanel, visiblePanelName);
         }
     }
-} 
+}

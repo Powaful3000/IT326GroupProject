@@ -14,27 +14,27 @@ public class UIManager {
     private final GroupHandler groupHandler;
     private final StudentController studentController;
 
-    public UIManager(JFrame parentFrame, DatabaseHandler dbHandler, 
-                    StudentHandler studentHandler, PostHandler postHandler, 
-                    TagHandler tagHandler, StudentController studentController,
-                    GroupHandler groupHandler) {
+    public UIManager(JFrame parentFrame, DatabaseHandler dbHandler,
+            StudentHandler studentHandler, PostHandler postHandler,
+            TagHandler tagHandler, StudentController studentController,
+            GroupHandler groupHandler) {
         this.parentFrame = parentFrame;
         this.studentController = studentController;
         this.groupHandler = groupHandler;
         this.cardLayout = new CardLayout();
         this.mainPanel = new JPanel(cardLayout);
         this.panelManager = new PanelManager(cardLayout, mainPanel);
-        
+
         this.groupListModel = new DefaultListModel<>();
         this.groupList = new JList<>(groupListModel);
-        
-        this.dialogManager = new DialogManager(parentFrame, dbHandler, studentHandler, 
-                                             postHandler, tagHandler, studentController, 
-                                             null, this);
-        this.panelFactory = new PanelFactory(studentController, dbHandler, studentHandler, 
-                                           dialogManager, cardLayout, mainPanel, 
-                                           postHandler, tagHandler);
-        
+
+        this.dialogManager = new DialogManager(parentFrame, dbHandler, studentHandler,
+                postHandler, tagHandler, studentController,
+                null, this);
+        this.panelFactory = new PanelFactory(studentController, dbHandler, studentHandler,
+                dialogManager, cardLayout, mainPanel,
+                postHandler, tagHandler);
+
         setupGroupManagement();
         dialogManager.setPanelFactory(panelFactory);
         panelFactory.initializePanels();
@@ -84,7 +84,7 @@ public class UIManager {
     }
 
     public void updateAllPanelsState(boolean enabled) {
-        for (String panelName : new String[]{"Dashboard", "Groups", "Tags", "Posts", "Search", "Profile"}) {
+        for (String panelName : new String[] { "Dashboard", "Groups", "Tags", "Posts", "Search", "Profile" }) {
             updatePanelState(panelName, enabled);
         }
     }
@@ -94,10 +94,10 @@ public class UIManager {
         updatePanelState("Welcome", true);
         updatePanelState("Login", true);
         updatePanelState("Create Account", true);
-        
+
         // Disable authenticated panels initially
         String[] authenticatedPanels = {
-            "Dashboard", "Groups", "Tags", "Posts", "Search", "Profile"
+                "Dashboard", "Groups", "Tags", "Posts", "Search", "Profile"
         };
         for (String panelName : authenticatedPanels) {
             updatePanelState(panelName, false);
@@ -106,7 +106,7 @@ public class UIManager {
 
     public void enableAuthenticatedPanels(boolean enabled) {
         String[] authenticatedPanels = {
-            "Dashboard", "Groups", "Tags", "Posts", "Search", "Profile"
+                "Dashboard", "Groups", "Tags", "Posts", "Search", "Profile"
         };
         for (String panelName : authenticatedPanels) {
             updatePanelState(panelName, enabled);
@@ -126,10 +126,10 @@ public class UIManager {
     public void updateGroupList() {
         groupListModel.clear();
         List<Group> groups = groupHandler.getAllGroups();
-        
+
         // Sort groups by size (in case database sorting isn't working)
         groups.sort((g1, g2) -> Integer.compare(g2.getSize(), g1.getSize()));
-        
+
         for (Group group : groups) {
             groupListModel.addElement(group);
         }
@@ -139,41 +139,41 @@ public class UIManager {
         Group selectedGroup = groupList.getSelectedValue();
         if (selectedGroup != null) {
             if (studentController.joinGroup(selectedGroup.getID())) {
-                JOptionPane.showMessageDialog(parentFrame, 
-                    "Successfully joined group!", 
-                    "Success", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(parentFrame,
+                        "Successfully joined group!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(parentFrame, 
-                    "Failed to join group", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(parentFrame,
+                        "Failed to join group",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            String groupName = JOptionPane.showInputDialog(parentFrame, 
-                "Enter group name to join:", 
-                "Join Group", 
-                JOptionPane.QUESTION_MESSAGE);
-            
+            String groupName = JOptionPane.showInputDialog(parentFrame,
+                    "Enter group name to join:",
+                    "Join Group",
+                    JOptionPane.QUESTION_MESSAGE);
+
             if (groupName != null && !groupName.trim().isEmpty()) {
                 Group group = groupHandler.findGroupByName(groupName);
                 if (group != null) {
                     if (studentController.joinGroup(group.getID())) {
-                        JOptionPane.showMessageDialog(parentFrame, 
-                            "Successfully joined group!", 
-                            "Success", 
-                            JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(parentFrame,
+                                "Successfully joined group!",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
                     } else {
-                        JOptionPane.showMessageDialog(parentFrame, 
-                            "Failed to join group", 
-                            "Error", 
-                            JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(parentFrame,
+                                "Failed to join group",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(parentFrame, 
-                        "Group not found!", 
-                        "Error", 
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(parentFrame,
+                            "Group not found!",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
@@ -184,41 +184,41 @@ public class UIManager {
         Group selectedGroup = groupList.getSelectedValue();
         if (selectedGroup != null) {
             if (studentController.leaveGroup(selectedGroup.getID())) {
-                JOptionPane.showMessageDialog(parentFrame, 
-                    "Successfully left group!", 
-                    "Success", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(parentFrame,
+                        "Successfully left group!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(parentFrame, 
-                    "Failed to leave group", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(parentFrame,
+                        "Failed to leave group",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            String groupName = JOptionPane.showInputDialog(parentFrame, 
-                "Enter group name to leave:", 
-                "Leave Group", 
-                JOptionPane.QUESTION_MESSAGE);
-            
+            String groupName = JOptionPane.showInputDialog(parentFrame,
+                    "Enter group name to leave:",
+                    "Leave Group",
+                    JOptionPane.QUESTION_MESSAGE);
+
             if (groupName != null && !groupName.trim().isEmpty()) {
                 Group group = groupHandler.findGroupByName(groupName);
                 if (group != null) {
                     if (studentController.leaveGroup(group.getID())) {
-                        JOptionPane.showMessageDialog(parentFrame, 
-                            "Successfully left group!", 
-                            "Success", 
-                            JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(parentFrame,
+                                "Successfully left group!",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
                     } else {
-                        JOptionPane.showMessageDialog(parentFrame, 
-                            "Failed to leave group", 
-                            "Error", 
-                            JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(parentFrame,
+                                "Failed to leave group",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(parentFrame, 
-                        "Group not found!", 
-                        "Error", 
-                        JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(parentFrame,
+                            "Group not found!",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
@@ -232,4 +232,4 @@ public class UIManager {
     public JList<Group> getGroupList() {
         return groupList;
     }
-} 
+}

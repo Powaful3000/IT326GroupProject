@@ -44,8 +44,8 @@ public class GroupHandler {
 
     public Group getGroupByID(int groupID) {
         return getAllGroups().stream()
-            .filter(group -> group.getID() == groupID)
-            .findFirst()
-            .orElse(null);
+                .filter(group -> group.getID() == groupID)
+                .findFirst()
+                .orElse(null);
     }
 }
