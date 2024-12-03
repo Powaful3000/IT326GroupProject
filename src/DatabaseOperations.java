@@ -25,7 +25,7 @@ public interface DatabaseOperations {
 
     boolean containsTag(Tag tag);
 
-    void createPost(Post post);
+    boolean createPost(Post post);
 
     boolean addTagToStudent(int studentId, int tagId);
 
@@ -58,4 +58,12 @@ public interface DatabaseOperations {
     boolean removeFriend(int userId, int friendId);
 
     boolean unblockUser(int blockerId, int blockedId);
+
+    boolean removeMemberFromGroup(int groupId, int studentId);
+
+    boolean deleteStudent(int studentId);
+    
+    boolean updateStudentPassword(int studentId, String newPassword);
+
+    List<Post> getGroupPosts(int groupId);
 }

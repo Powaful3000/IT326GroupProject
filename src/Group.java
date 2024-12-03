@@ -129,6 +129,11 @@ public class Group {
         return members.size();
     }
 
+    public boolean isMember(Student student) {
+        return members.stream()
+            .anyMatch(member -> member.getID() == student.getID());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

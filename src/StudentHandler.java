@@ -136,11 +136,14 @@ public class StudentHandler {
     }
 
     public Student getStudentByUsername(String username) {
-        if (username == null || username.trim().isEmpty()) {
+        if (username == null) {
             return null;
         }
+        
         for (Student student : students) {
-            if (student.getUsername().equals(username)) {
+            // Add null check for student's username
+            String studentUsername = student.getUsername();
+            if (studentUsername != null && studentUsername.equals(username)) {
                 return student;
             }
         }

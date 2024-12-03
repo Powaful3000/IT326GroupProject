@@ -191,4 +191,28 @@ public class StudentController {
 
         return groupHandler.addMemberToGroup(group.getID(), currentStudent);
     }
+
+    public Group getGroupByID(int groupID) {
+        return groupHandler.getGroupByID(groupID);
+    }
+
+    public List<Student> searchStudents(String searchTerm) {
+        return studentHandler.getAllStudents().stream()
+            .filter(s -> s.getName().toLowerCase().contains(searchTerm.toLowerCase()))
+            .collect(Collectors.toList());
+    }
+
+    public List<Student> searchStudentsByTag(Tag tag) {
+        return studentHandler.getAllStudents().stream()
+            .filter(s -> s.getTags().contains(tag))
+            .collect(Collectors.toList());
+    }
+
+    public List<Student> getGroupMembers(Group group) {
+        if (group == null) {
+            System.err.println("Cannot get members for null group");
+            return new ArrayList<>();
+        }
+        return group.getMembers();
+    }
 }
