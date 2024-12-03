@@ -9,9 +9,9 @@ public class MainGUI extends JFrame {
     public MainGUI(StudentController studentController, DatabaseHandler dbHandler) {
         this.studentController = studentController;
         this.dbHandler = dbHandler;
-        this.uiManager = new UIManager(this, dbHandler, StudentHandler.getInstance(), 
-                                     new PostHandler(), new TagHandler(), studentController,
-                                     new GroupHandler(dbHandler));
+        this.uiManager = new UIManager(this, dbHandler, StudentHandler.getInstance(),
+                new PostHandler(), new TagHandler(), studentController,
+                new GroupHandler(dbHandler));
         setupFrame();
     }
 
@@ -33,8 +33,8 @@ public class MainGUI extends JFrame {
 
         StudentHandler studentHandler = StudentHandler.getInstance();
         GroupHandler groupHandler = new GroupHandler(dbHandler);
-        final StudentController studentController = new StudentController(studentHandler, groupHandler, 
-            (MySQLHandler)dbHandler.getDatabase());
+        final StudentController studentController = new StudentController(studentHandler, groupHandler,
+                (MySQLHandler) dbHandler.getDatabase());
 
         SwingUtilities.invokeLater(() -> new MainGUI(studentController, dbHandler));
 
