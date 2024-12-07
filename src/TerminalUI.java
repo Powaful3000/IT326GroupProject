@@ -247,17 +247,17 @@ public class TerminalUI {
     }
 
     private void viewGroups() {
-    	student.getGroups();
+    	currentUser.getGroups();
     }
     
     private void joinGroup() {
     	System.out.println("Enter desired group name to join: ");
     	String name = scanner.nextLine();
     	// fetch group with matching name and set to groupToJoin
-    	if (Student.getGroups().contains(groupToJoin)) {
+    	if (currentUser.getGroups().contains(groupToJoin)) {
     		System.out.println("Student is already in this group");
     	} else {
-    		student.joinGroup(groupToJoin);
+    		currentUser.joinGroup(groupToJoin);
     	}
     }
     
@@ -267,15 +267,15 @@ public class TerminalUI {
     	System.out.println("Enter desired group description: ");
     	String desc = scanner.nextLine();
     	Group newGroup = new Group(0, name, desc); // placeholder 0 until logic figured out
-    	student.createGroup(newGroup);
+    	groupHandler.addGroup(newGroup);
     }
     
     private void leaveGroup() {
     	System.out.println("Enter desired group name to leave: ");
     	String name = scanner.nextLine();
     	// fetch group with matching name and set to groupToLeave
-    	if (Student.getGroups().contains(groupToLeave)) {
-    		student.leaveGroup(groupToLeave);
+    	if (currentUser.getGroups().contains(groupToLeave)) {
+    		currentUser.leaveGroup(groupToLeave);
     	} else {
     		System.out.println("Student is not in this group");
     	}
@@ -326,26 +326,29 @@ public class TerminalUI {
     private void changeEmail() {
     	System.out.print("Enter new email: ");
     	String email = scanner.nextLine();
-    	student.setEmail(email);
+    	currentUser.setEmail(email);
     }
     
     private void changeName() {
     	System.out.print("Enter new name: ");
     	String name = scanner.nextLine();
-    	student.setName(name);
+    	currentUser.setName(name);
     }
     
     private void changeYear() {
     	System.out.println("Enter new year: ");
     	String year = scanner.nextLine();
-    	student.setYear(year);
+    	currentUser.setYear(year);
     }
     
     private void addTag() {
-        System.out.print("Enter new tag: ");
-        String tag = scanner.nextLine();
+        System.out.print("Enter new tag name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter new tag description: ");
+        String desc = scanner.nextLine();
+        Tag tagAdd = new Tag(0, name, desc); // placeholder 0
         try {
-            studentHandler.addTagToStudent(currentUser.getID(), tag);
+            studentHandler.addTagToStudent(currentUser.getID(), tagAdd);
             System.out.println("Tag added successfully!");
         } catch (Exception e) {
             System.out.println("Error adding tag: " + e.getMessage());
@@ -353,10 +356,11 @@ public class TerminalUI {
     }
 
     private void removeTag() {
-    	System.out.print("Enter tag to remove: ");
+    	System.out.print("Enter tag name to remove: ");
         String tag = scanner.nextLine();
+        // fetch tag with matching name and set to tagRemove
         try {
-            studentHandler.removeTagFromStudent(currentUser.getID(), tag);
+            studentHandler.removeTagFromStudent(currentUser.getID(), tagRemove);
             System.out.println("Tag successfully removed!");
         } catch (Exception e) {
             System.out.println("Error removing tag: " + e.getMessage());
