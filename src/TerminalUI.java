@@ -173,6 +173,17 @@ public class TerminalUI {
         }
     }
 
+    private void handleRegistration()
+    {
+    	System.out.print("Desired email: ");
+        String email = scanner.nextLine();
+        System.out.print("Desired password: ");
+        String password = scanner.nextLine();
+        
+        // check if email and password already exist
+        // if not, create account
+    }
+    
     private void showMainMenu() {
         System.out.println("\nMain Menu");
         System.out.println("------------------------");
@@ -264,7 +275,7 @@ public class TerminalUI {
         System.out.print("Enter new tag: ");
         String tag = scanner.nextLine();
         try {
-            studentHandler.addTag(currentUser, tag);
+            studentHandler.addTagToStudent(currentUser.getID(), tag);
             System.out.println("Tag added successfully!");
         } catch (Exception e) {
             System.out.println("Error adding tag: " + e.getMessage());

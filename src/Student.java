@@ -5,6 +5,7 @@ public class Student {
 
     // Attributes
     private int userID;
+    private String userEmail;
     private String userName;
     private String userYear;
     private List<Tag> userTags;
@@ -18,9 +19,10 @@ public class Student {
     private String username;
 
     // Constructor
-    public Student(int userID, String userName, String userYear, List<Tag> userTags, List<Group> userGroups,
+    public Student(int userID, String email, String userName, String userYear, List<Tag> userTags, List<Group> userGroups,
             List<Post> userPosts) {
         this.userID = userID;
+        this.userEmail = email;
         this.userName = userName;
         this.userYear = userYear;
         this.userTags = userTags != null ? userTags : new ArrayList<>();
@@ -38,6 +40,10 @@ public class Student {
         return userID;
     }
 
+    public String getEmail() {
+    	return userEmail;
+    }
+    
     public String getName() {
         return userName;
     }
@@ -67,6 +73,10 @@ public class Student {
         this.userID = userID;
     }
 
+    public void setEmail(String email) {
+    	this.userEmail = email;
+    }
+    
     public void setName(String userName) {
         this.userName = userName;
     }
