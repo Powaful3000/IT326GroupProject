@@ -254,10 +254,10 @@ public class TerminalUI {
     	System.out.println("Enter desired group name to join: ");
     	String name = scanner.nextLine();
     	// fetch group with matching name and set to groupToJoin
-    	if (Student.getGroups().contains(groupToLeave)) {
+    	if (Student.getGroups().contains(groupToJoin)) {
     		System.out.println("Student is already in this group");
     	} else {
-    		student.joinGroup(group);
+    		student.joinGroup(groupToJoin);
     	}
     }
     
@@ -275,7 +275,7 @@ public class TerminalUI {
     	String name = scanner.nextLine();
     	// fetch group with matching name and set to groupToLeave
     	if (Student.getGroups().contains(groupToLeave)) {
-    		student.leaveGroup(group);
+    		student.leaveGroup(groupToLeave);
     	} else {
     		System.out.println("Student is not in this group");
     	}
