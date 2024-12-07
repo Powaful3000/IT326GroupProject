@@ -113,6 +113,7 @@ public class TerminalUI {
     private final StudentHandler studentHandler;
     private final GroupHandler groupHandler;
     private final PostHandler postHandler;
+    private final TagHandler tagHandler;
     private Student currentUser;
     private boolean isRunning;
     private final DatabaseHandler dbHandler;
@@ -124,6 +125,7 @@ public class TerminalUI {
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
         this.postHandler = new PostHandler();
+        this.tagHandler = new TagHandler();
         this.isRunning = true;
     }
 
@@ -254,6 +256,7 @@ public class TerminalUI {
     	System.out.println("Enter desired group name to join: ");
     	String name = scanner.nextLine();
     	// fetch group with matching name and set to groupToJoin
+    	
     	if (currentUser.getGroups().contains(groupToJoin)) {
     		System.out.println("Student is already in this group");
     	} else {
@@ -359,6 +362,7 @@ public class TerminalUI {
     	System.out.print("Enter tag name to remove: ");
         String tag = scanner.nextLine();
         // fetch tag with matching name and set to tagRemove
+        Tag tagRemove = tagHandler.getTagByName(tag);
         try {
             studentHandler.removeTagFromStudent(currentUser.getID(), tagRemove);
             System.out.println("Tag successfully removed!");
