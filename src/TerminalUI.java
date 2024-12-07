@@ -1,5 +1,113 @@
 import java.util.Scanner;
 
+
+/*
+ * David Notes
+ * 
+ * Main Menu Structure:
+ * 
+ * Welcome to Redbird Connect
+ * ------------------------
+ * 1. Login
+ * 2. Register
+ * 3. Exit
+ * 
+ * Please select an option:
+ * 
+ * 
+ * 
+ * After Login Menu Structure:
+ * 
+ * Main Menu
+ * ------------------------
+ * 1. My Profile
+ * 2. Class Groups
+ * 3. Friends
+ * 4. Messages
+ * 5. Logout
+ * 
+ * Please select an option:
+ * 
+ * 
+ * 
+ * Profile Menu Structure:
+ * 
+ * My Profile
+ * ------------------------
+ * Current Tags: [IT326] [Junior] [IT Major]
+ * 
+ * 1. View Profile Details
+ * 2. Edit Profile
+ * 3. Add Tag
+ * 4. Remove Tag
+ * 5. Enable/Disable Anonymous Mode
+ * 6. Back
+ * 
+ * Please select an option:
+ * 
+ * 
+ * 
+ * Class Groups Menu Structure:
+ * 
+ * Class Groups
+ * ------------------------
+ * Your Groups:
+ * - IT 326 - Software Engineering
+ * - IT 355 - Database Management
+ * - IT 328 - Programming Languages
+ * 
+ * 1. View My Groups
+ * 2. Join Group
+ * 3. Create Group
+ * 4. Leave Group
+ * 5. Back
+ * 
+ * Please select an option:
+ * 
+ * 
+ * 
+ * Inside Group Menu Structure:
+ * 
+ * IT 326 - Software Engineering
+ * ------------------------
+ * Recent Posts:
+ * [User1] How do I implement a singleton pattern?
+ * [Anonymous] When is the next homework due?
+ * [User3] Looking for project partners
+ * 
+ * 1. View All Posts
+ * 2. Create Post
+ * 3. My Posts
+ * 4. Bookmarked Posts
+ * 5. Back
+ * 
+ * Please select an option:
+ * 
+ * 
+ * 
+ * Friends Menu Structure:
+ * 
+ * Friends
+ * ------------------------
+ * Your Friends:
+ * - User1 (Online)
+ * - User2 (Offline)
+ * - User3 (Online)
+ * 
+ * 1. View Friends List
+ * 2. Send Friend Request
+ * 3. View Pending Requests
+ * 4. Block User
+ * 5. Remove Friend
+ * 6. Back
+ * 
+ * Please select an option:
+ * 
+ *
+ */
+
+
+
 public class TerminalUI {
     private final Scanner scanner;
     private final StudentHandler studentHandler;
