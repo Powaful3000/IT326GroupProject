@@ -251,15 +251,35 @@ public class TerminalUI {
     }
     
     private void joinGroup() {
-    	student.joinGroup(group);
+    	System.out.println("Enter desired group name to join: ");
+    	String name = scanner.nextLine();
+    	// fetch group with matching name and set to groupToJoin
+    	if (Student.getGroups().contains(groupToLeave)) {
+    		System.out.println("Student is already in this group");
+    	} else {
+    		student.joinGroup(group);
+    	}
     }
     
     private void createGroup() {
-    	student.createGroup(group);
+    	System.out.println("Enter desired group name: ");
+    	String name = scanner.nextLine();
+    	System.out.println("Enter desired group description: ");
+    	String desc = scanner.nextLine();
+    	Group newGroup = new Group(0, name, desc); // placeholder 0 until logic figured out
+    	student.createGroup(newGroup);
     }
     
     private void leaveGroup() {
-    	student.leaveGroup(group);
+    	System.out.println("Enter desired group name to leave: ");
+    	String name = scanner.nextLine();
+    	// fetch group with matching name and set to groupToLeave
+    	if (Student.getGroups().contains(groupToLeave)) {
+    		student.leaveGroup(group);
+    	} else {
+    		System.out.println("Student is not in this group");
+    	}
+    	
     }
     
     // Helper method for getting validated integer input
