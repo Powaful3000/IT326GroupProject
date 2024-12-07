@@ -198,8 +198,8 @@ public class TerminalUI {
         switch (choice) {
             case 1 -> showProfileMenu();
             case 2 -> showGroupsMenu();
-            case 3 -> showFriendsMenu();
-            case 4 -> showMessagesMenu();
+            //case 3 -> showFriendsMenu();
+            //case 4 -> showMessagesMenu();
             case 5 -> logout();
         }
     }
@@ -221,7 +221,7 @@ public class TerminalUI {
             case 2 -> editProfile();
             case 3 -> addTag();
             case 4 -> removeTag();
-            case 5 -> toggleAnonymousMode();
+            //case 5 -> toggleAnonymousMode();
             case 6 -> {} // Return to main menu
         }
     }
@@ -246,6 +246,22 @@ public class TerminalUI {
         }
     }
 
+    private void viewGroups() {
+    	student.getGroups();
+    }
+    
+    private void joinGroup() {
+    	student.joinGroup(group);
+    }
+    
+    private void createGroup() {
+    	student.createGroup(group);
+    }
+    
+    private void leaveGroup() {
+    	student.leaveGroup(group);
+    }
+    
     // Helper method for getting validated integer input
     private int getIntInput(int min, int max) {
         while (true) {
@@ -271,6 +287,40 @@ public class TerminalUI {
         // Add more profile details as needed
     }
 
+    private void editProfile() {
+    	System.out.println("\nEdit Profile Options");
+    	System.out.println("------------------------");
+    	System.out.println("\n1. Change my email");
+        System.out.println("2. Change my name");
+        System.out.println("3. Change my year");
+        System.out.println("4. Back");
+    	int choice = getIntInput(1, 4);
+        switch (choice) {
+            case 1 -> changeEmail();
+            case 2 -> changeName();
+            case 3 -> changeYear();
+            case 4 -> {} // Return to main menu
+        }
+    }
+    
+    private void changeEmail() {
+    	System.out.print("Enter new email: ");
+    	String email = scanner.nextLine();
+    	student.setEmail(email);
+    }
+    
+    private void changeName() {
+    	System.out.print("Enter new name: ");
+    	String name = scanner.nextLine();
+    	student.setName(name);
+    }
+    
+    private void changeYear() {
+    	System.out.println("Enter new year: ");
+    	String year = scanner.nextLine();
+    	student.setYear(year);
+    }
+    
     private void addTag() {
         System.out.print("Enter new tag: ");
         String tag = scanner.nextLine();
@@ -282,6 +332,16 @@ public class TerminalUI {
         }
     }
 
+    private void removeTag() {
+    	System.out.print("Enter tag to remove: ");
+        String tag = scanner.nextLine();
+        try {
+            studentHandler.removeTagFromStudent(currentUser.getID(), tag);
+            System.out.println("Tag successfully removed!");
+        } catch (Exception e) {
+            System.out.println("Error removing tag: " + e.getMessage());
+        }
+    }
     // Add other necessary methods...
 
     private void logout() {
