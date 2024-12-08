@@ -6,21 +6,21 @@ import java.util.stream.Collectors;
 
 /*
  * David Notes
- * 
+ *
  * Main Menu Structure:
- * 
+ *
  * Welcome to Redbird Connect
  * ------------------------
  * 1. Login
  * 2. Register
  * 3. Exit
- * 
+ *
  * Please select an option:
- * 
- * 
- * 
+ *
+ *
+ *
  * After Login Menu Structure:
- * 
+ *
  * Main Menu
  * ------------------------
  * 1. My Profile
@@ -28,84 +28,84 @@ import java.util.stream.Collectors;
  * 3. Friends
  * 4. Messages
  * 5. Logout
- * 
+ *
  * Please select an option:
- * 
- * 
- * 
+ *
+ *
+ *
  * Profile Menu Structure:
- * 
+ *
  * My Profile
  * ------------------------
  * Current Tags: [IT326] [Junior] [IT Major]
- * 
+ *
  * 1. View Profile Details
  * 2. Edit Profile
  * 3. Add Tag
  * 4. Remove Tag
  * 5. Enable/Disable Anonymous Mode
  * 6. Back
- * 
+ *
  * Please select an option:
- * 
- * 
- * 
+ *
+ *
+ *
  * Class Groups Menu Structure:
- * 
+ *
  * Class Groups
  * ------------------------
  * Your Groups:
  * - IT 326 - Software Engineering
  * - IT 355 - Database Management
  * - IT 328 - Programming Languages
- * 
+ *
  * 1. View My Groups
  * 2. Join Group
  * 3. Create Group
  * 4. Leave Group
  * 5. Back
- * 
+ *
  * Please select an option:
- * 
- * 
- * 
+ *
+ *
+ *
  * Inside Group Menu Structure:
- * 
+ *
  * IT 326 - Software Engineering
  * ------------------------
  * Recent Posts:
  * [User1] How do I implement a singleton pattern?
  * [Anonymous] When is the next homework due?
  * [User3] Looking for project partners
- * 
+ *
  * 1. View All Posts
  * 2. Create Post
  * 3. My Posts
  * 4. Bookmarked Posts
  * 5. Back
- * 
+ *
  * Please select an option:
- * 
- * 
- * 
+ *
+ *
+ *
  * Friends Menu Structure:
- * 
+ *
  * Friends
  * ------------------------
  * Your Friends:
  * - User1 (Online)
  * - User2 (Offline)
  * - User3 (Online)
- * 
+ *
  * 1. View Friends List
  * 2. Send Friend Request
  * 3. View Pending Requests
  * 4. Block User
  * 5. Remove Friend
  * 6. Back
- * 
+ *
  * Please select an option:
- * 
+ *
  *
  */
 
@@ -184,11 +184,11 @@ public class TerminalUI {
         String email = scanner.nextLine();
         System.out.print("Desired password: ");
         String password = scanner.nextLine();
-        System.out.print("Enter your name: ");
+        System.out.print("Enter your name (first and last): ");
         String name = scanner.nextLine();
         System.out.print("Enter your year (Freshman/Sophomore/Junior/Senior): ");
         String year = scanner.nextLine();
-        
+
         try {
             // Check if email already exists
             Student existingStudent = studentHandler.getStudentByUsername(email);
@@ -196,14 +196,14 @@ public class TerminalUI {
                 System.out.println("An account with this email already exists.");
                 return;
             }
-            
+
             // Create new student (using 0 as temporary ID, database will assign real ID)
-            Student newStudent = new Student(0, email, name, year, 
+            Student newStudent = new Student(0, email, name, year,
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-                
+
             // Add student to database with password
             boolean success = dbHandler.addStudent(newStudent, password);
-            
+
             if (success) {
                 System.out.println("Registration successful! Please login with your credentials.");
             } else {
@@ -213,7 +213,7 @@ public class TerminalUI {
             System.out.println("Error during registration: " + e.getMessage());
         }
     }
-    
+
     private void showMainMenu() {
         System.out.println("\nMain Menu");
         System.out.println("------------------------");
@@ -286,17 +286,17 @@ public class TerminalUI {
         System.out.println("Enter group name to access: ");
         String groupName = scanner.nextLine();
         Group selectedGroup = groupHandler.findGroupByName(groupName);
-        
+
         if (selectedGroup == null) {
             System.out.println("Group not found.");
             return;
         }
-        
+
         if (!selectedGroup.isMember(currentUser)) {
             System.out.println("You must be a member of the group to access it.");
             return;
         }
-        
+
         currentGroup = selectedGroup;
         showPostsMenu();
     }
@@ -304,7 +304,7 @@ public class TerminalUI {
     private void viewGroups() {
         System.out.println("\nYour Groups:");
         System.out.println("------------------------");
-        
+
         try {
             List<Group> userGroups = currentUser.getGroups();
             if (userGroups.isEmpty()) {
@@ -317,22 +317,22 @@ public class TerminalUI {
         } catch (Exception e) {
             System.out.println("Error retrieving groups: " + e.getMessage());
         }
-        
+
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
-    
+
     private void joinGroup() {
         System.out.println("Enter desired group name to join: ");
         String name = scanner.nextLine();
-        
+
         try {
             Group groupToJoin = groupHandler.findGroupByName(name);
             if (groupToJoin == null) {
                 System.out.println("Group not found.");
                 return;
             }
-            
+
             if (currentUser.getGroups().contains(groupToJoin)) {
                 System.out.println("Student is already in this group");
             } else {
@@ -345,7 +345,7 @@ public class TerminalUI {
             System.out.println("Error joining group: " + e.getMessage());
         }
     }
-    
+
     private void createGroup() {
         try {
             // Input validation
@@ -389,7 +389,7 @@ public class TerminalUI {
             System.out.println("Error creating group: " + e.getMessage());
         }
     }
-    
+
     private void leaveGroup() {
         System.out.println("Enter desired group name to leave: ");
         String name = scanner.nextLine();
@@ -398,7 +398,7 @@ public class TerminalUI {
             System.out.println("Group not found.");
             return;
         }
-        
+
         if (currentUser.getGroups().contains(groupToLeave)) {
             // Update both database and in-memory state
             if (dbHandler.leaveGroup(groupToLeave, currentUser)) {
@@ -411,11 +411,11 @@ public class TerminalUI {
             System.out.println("You are not a member of this group");
         }
     }
-    
+
     private void viewAllGroups() {
         System.out.println("\nAll Available Groups:");
         System.out.println("------------------------");
-        
+
         try {
             List<Group> allGroups = groupHandler.getAllGroups();
             if (allGroups.isEmpty()) {
@@ -431,11 +431,11 @@ public class TerminalUI {
         } catch (Exception e) {
             System.out.println("Error retrieving groups: " + e.getMessage());
         }
-        
+
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
-    
+
     // Helper method for getting validated integer input
     private int getIntInput(int min, int max) {
         while (true) {
@@ -476,25 +476,25 @@ public class TerminalUI {
             case 4 -> {} // Return to main menu
         }
     }
-    
+
     private void changeEmail() {
     	System.out.print("Enter new email: ");
     	String email = scanner.nextLine();
     	currentUser.setEmail(email);
     }
-    
+
     private void changeName() {
     	System.out.print("Enter new name: ");
     	String name = scanner.nextLine();
     	currentUser.setName(name);
     }
-    
+
     private void changeYear() {
     	System.out.println("Enter new year: ");
     	String year = scanner.nextLine();
     	currentUser.setYear(year);
     }
-    
+
     private void addTag() {
         System.out.print("Enter new tag name: ");
         String name = scanner.nextLine();
@@ -564,9 +564,9 @@ public class TerminalUI {
 
         System.out.println("\nAll Posts in " + currentGroup.getName());
         System.out.println("------------------------");
-        
+
         List<Post> posts = dbHandler.getGroupPosts(currentGroup.getID());
-        
+
         if (posts.isEmpty()) {
             System.out.println("No posts in this group yet.");
         } else {
@@ -575,7 +575,7 @@ public class TerminalUI {
                 System.out.println(post.getContent());
             }
         }
-        
+
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
@@ -604,7 +604,7 @@ public class TerminalUI {
 
         // Create new post with the current group context
         Post newPost = new Post(0, content, currentUser, currentGroup); // ID will be set by database
-        
+
         try {
             // First create in database to get the ID
             if (dbHandler.createPost(newPost)) {
@@ -631,12 +631,12 @@ public class TerminalUI {
         while (true) {
             System.out.println("\nYour Posts in " + currentGroup.getName());
             System.out.println("------------------------");
-            
+
             List<Post> allPosts = dbHandler.getGroupPosts(currentGroup.getID());
             List<Post> myPosts = allPosts.stream()
                 .filter(post -> post.getOwner().getID() == currentUser.getID())
                 .collect(Collectors.toList());
-            
+
             if (myPosts.isEmpty()) {
                 System.out.println("You haven't made any posts in this group yet.");
                 System.out.println("\nPress Enter to go back...");
@@ -649,22 +649,22 @@ public class TerminalUI {
                 System.out.println("\n[" + (i + 1) + "] Post:");
                 System.out.println(myPosts.get(i).getContent());
             }
-            
+
             System.out.println("\nOptions:");
             System.out.println("1. Edit a post");
             System.out.println("2. Delete a post");
             System.out.println("3. Back");
-            
+
             int choice = getIntInput(1, 3);
-            
+
             if (choice == 3) {
                 return;
             }
-            
+
             System.out.println("Enter the number of the post to " + (choice == 1 ? "edit" : "delete") + " (1-" + myPosts.size() + "):");
             int postIndex = getIntInput(1, myPosts.size()) - 1;
             Post selectedPost = myPosts.get(postIndex);
-            
+
             if (choice == 1) {
                 editPost(selectedPost);
             } else {
@@ -678,7 +678,7 @@ public class TerminalUI {
         System.out.println(post.getContent());
         System.out.println("\nEnter new content (or press Enter without typing to cancel):");
         String newContent = scanner.nextLine();
-        
+
         if (newContent.trim().isEmpty()) {
             System.out.println("Edit cancelled.");
             return;
@@ -698,7 +698,7 @@ public class TerminalUI {
     private void deletePost(Post post) {
         System.out.println("Are you sure you want to delete this post? (y/n)");
         String confirm = scanner.nextLine().trim().toLowerCase();
-        
+
         if (confirm.equals("y")) {
             // First delete from database
             if (dbHandler.deletePost(post.getID())) {
@@ -724,7 +724,7 @@ public class TerminalUI {
         for (Post post : bookmarked) {
             displayPost(post);
         }
-        
+
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }
