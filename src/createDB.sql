@@ -156,27 +156,15 @@ CREATE TABLE
 -- =============================================
 -- Insert Initial Test Data
 -- =============================================
--- Create test users with hashed passwords
+-- Create a test user with a hashed password
 INSERT INTO
     students (userID, userName, password, userYear)
 VALUES
     (
         1001,
         'testuser1',
-        SHA2('testuser1', 256),
+        SHA2 ('testuser1', 256),
         'Senior'
-    ),
-    (
-        1002,
-        'testuser2',
-        SHA2('testuser2', 256),
-        'Junior'
-    ),
-    (
-        1003,
-        'dsadsa321',
-        SHA2('dsadsa321', 256),
-        'Sophomore'
     );
 
 -- Password is hashed using SHA-256

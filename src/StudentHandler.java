@@ -165,14 +165,24 @@ public class StudentHandler {
             return null;
         }
 
-        for (Student student : students) {
-            // Add null check for student's username
-            String studentUsername = student.getUsername();
-            if (studentUsername != null && studentUsername.equals(username)) {
-                return student;
+        try {
+            // Get database instance
+            Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
+            DatabaseHandler dbHandler = new DatabaseHandler(database);
+            
+            // Look up student in database
+            Student student = dbHandler.getStudentByUsername(username);
+            
+            // Update local cache if found
+            if (student != null && !students.contains(student)) {
+                students.add(student);
             }
+            
+            return student;
+        } catch (Exception e) {
+            System.err.println("Error looking up student by username: " + e.getMessage());
+            return null;
         }
-        return null;
     }
     
     public Student authenticateStudent(String email, String password) {

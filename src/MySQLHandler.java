@@ -139,6 +139,10 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_DECLINE_REQUEST = "UPDATE friend_requests SET status = 'DECLINED' WHERE fromUserID = ? AND toUserID = ? AND status = 'PENDING'";
     private static final String SQL_CHECK_BLOCKED = "SELECT * FROM blocked_users WHERE blockerID = ? AND blockedID = ?";
 
+    private static final String SQL_GET_STUDENT_BY_EMAIL = "SELECT * FROM " + TABLE_STUDENTS + " WHERE email = ?";
+
+    private static final String SQL_ADD_FRIENDSHIP = "INSERT INTO friends (userID1, userID2) VALUES (?, ?)";
+
     // Constructor
     public MySQLHandler(String dbName) {
         super(dbName);
@@ -1077,12 +1081,27 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     @Override
     public boolean acceptFriendRequest(int requesterId, int accepterId) {
-        return executeUpdate(
+        // First update the request status
+        boolean requestUpdated = executeUpdate(
             SQL_ACCEPT_REQUEST,
             stmt -> {
-            stmt.setInt(1, requesterId);
-            stmt.setInt(2, accepterId);
+                stmt.setInt(1, requesterId);
+                stmt.setInt(2, accepterId);
+            }
+        );
+
+        if (!requestUpdated) {
+            return false;
         }
+
+        // Then add the friendship
+        return executeUpdate(
+            SQL_ADD_FRIENDSHIP,
+            stmt -> {
+                stmt.setInt(1, requesterId);
+                stmt.setInt(2, accepterId);
+                System.out.println("Adding friendship between users " + requesterId + " and " + accepterId);
+            }
         );
     }
 
@@ -1115,6 +1134,27 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             SQL_GET_INCOMING_REQUESTS,
             stmt -> stmt.setInt(1, studentId),
             this::mapResultSetToStudentList
+        );
+    }
+
+    public Student findStudentByEmail(String email) {
+        return executeQuery(
+            SQL_GET_STUDENT_BY_EMAIL,
+            stmt -> stmt.setString(1, email),
+            rs -> {
+                if (rs.next()) {
+                    return new Student(
+                        rs.getInt("userID"),
+                        rs.getString("email"),
+                        rs.getString("userName"),
+                        rs.getString("userYear"),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                    );
+                }
+                return null;
+            }
         );
     }
 
