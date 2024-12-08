@@ -35,9 +35,9 @@ DROP TABLE IF EXISTS students;
 -- Create the main students table - this is the core entity
 CREATE TABLE
     students (
-        userID INT PRIMARY KEY, -- Unique identifier for each student
-        userName VARCHAR(50) NOT NULL UNIQUE, -- Username must be unique
-        password VARCHAR(64) NOT NULL, -- SHA-256 hash is 64 characters
+        userID INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each student
+        userName VARCHAR(255) NOT NULL, -- Username must be unique
+        password VARCHAR(255) NOT NULL, -- SHA-256 hash is 64 characters
         userYear VARCHAR(20) NOT NULL, -- Student's academic year
         isAnonymous BOOLEAN DEFAULT FALSE -- Whether student is in anonymous mode
     );

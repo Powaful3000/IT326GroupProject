@@ -28,8 +28,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_SELECT_STUDENT_BY_ID = "SELECT * FROM " + TABLE_STUDENTS + " WHERE userID = ?";
     private static final String SQL_SELECT_STUDENT_BY_USERNAME = "SELECT * FROM " + TABLE_STUDENTS
             + " WHERE userName = ?";
-    private static final String SQL_INSERT_STUDENT = "INSERT INTO " + TABLE_STUDENTS
-            + " (userID, userName, password, userYear) VALUES (?, ?, ?, ?)";
+    private static final String SQL_INSERT_STUDENT = "INSERT INTO students (userName, password, userYear) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_STUDENT = "DELETE FROM " + TABLE_STUDENTS + " WHERE userID = ?";
     private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS
             + " (postID, postContent, postOwner) VALUES (?, ?, ?)";
@@ -46,8 +45,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             + " SET groupSize = (SELECT COUNT(*) FROM " + TABLE_MEMBERSHIPS + " WHERE groupID = ?) WHERE groupID = ?";
     private static final String SQL_UPDATE_STUDENT = "UPDATE " + TABLE_STUDENTS
             + " SET userName = ?, userYear = ? WHERE userID = ?";
-    private static final String SQL_AUTHENTICATE_STUDENT = "SELECT * FROM " + TABLE_STUDENTS
-            + " WHERE userName = ? AND password = ?";
+    private static final String SQL_AUTHENTICATE_STUDENT = "SELECT * FROM students WHERE userName = ? AND password = ?";
     private static final String SQL_CHECK_USERNAME_EXISTS = "SELECT COUNT(*) FROM " + TABLE_STUDENTS
             + " WHERE userName = ?";
     private static final String SQL_SELECT_GROUP_MEMBERS_DETAILED = "SELECT s.* FROM " + TABLE_STUDENTS + " s " +
@@ -146,10 +144,9 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 connection = DriverManager.getConnection(
-                    DatabaseConfig.getConnectionUrl(),
-                    DatabaseConfig.DB_USER,
-                    DatabaseConfig.DB_PASSWORD
-                );
+                        DatabaseConfig.getConnectionUrl(),
+                        DatabaseConfig.DB_USER,
+                        DatabaseConfig.DB_PASSWORD);
                 isConnected = true;
                 System.out.println("Connected to MySQL database: " + dbName);
             } catch (ClassNotFoundException | SQLException e) {
@@ -191,26 +188,16 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 stmt -> {
                     System.out.println("\n====== MySQL Add Student Debug ======");
                     System.out.println("Input Values:");
-                    System.out.println("- userID: " + student.getID());
-                    System.out.println("- userName: " + student.getName());
+                    System.out.println("- email: " + student.getEmail());
                     System.out.println("- Original password length: " + password.length());
                     System.out.println("- userYear: " + student.getYear());
 
-                    String hashedPw = hashPassword(password);
-                    System.out.println("\nPassword Hashing:");
-                    System.out.println("- Original password (first 3 chars): "
-                            + password.substring(0, Math.min(3, password.length())) + "...");
-                    System.out.println("- Hashed password length: " + hashedPw.length());
-                    System.out.println("- Hashed password: " + hashedPw);
-
-                    stmt.setInt(1, student.getID());
-                    stmt.setString(2, student.getName());
-                    stmt.setString(3, hashedPw);
-                    stmt.setString(4, student.getYear());
-
-                    System.out.println("\nDatabase Operation:");
-                    System.out.println("- SQL Query: INSERT INTO students...");
-                });
+                    stmt.setString(1, student.getEmail());
+                    stmt.setString(2, hashPassword(password));
+                    stmt.setString(3, student.getYear());
+                    System.out.println("Parameters set, executing update...");
+                }
+        );
     }
 
     // Method to remove a student from the database
@@ -265,28 +252,37 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     @Override
     public Student authenticateStudent(String username, String password) {
+        System.out.println("\n====== MySQL Authentication Debug ======");
+        System.out.println("Attempting authentication:");
+        System.out.println("- Username: " + username);
+        System.out.println("- Password hash: " + hashPassword(password));
+        System.out.println("- SQL Query: " + SQL_AUTHENTICATE_STUDENT);
+
         return executeQuery(
                 SQL_AUTHENTICATE_STUDENT,
                 stmt -> {
                     stmt.setString(1, username);
                     stmt.setString(2, hashPassword(password));
-                    System.out.println("Debug - Auth attempt for user: " + username);
                 },
                 rs -> {
                     if (rs.next()) {
+                        // Debug stored values
+                        System.out.println("\nDatabase record found:");
+                        System.out.println("- Stored username: " + rs.getString("userName"));
+                        System.out.println("- Stored password hash: " + rs.getString("password"));
+
                         Student student = new Student(
                                 rs.getInt("userID"),
-                                null,
+                                username, // Changed from null to username
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
                                 new ArrayList<>(),
                                 new ArrayList<>(),
-                                new ArrayList<>()
-                        );
-                        System.out.println("Debug - Authentication successful for: " + username);
+                                new ArrayList<>());
+                        System.out.println("Authentication successful!");
                         return student;
                     }
-                    System.out.println("Debug - Authentication failed for: " + username);
+                    System.out.println("No matching record found");
                     return null;
                 });
     }
@@ -350,8 +346,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                                                 memberRs.getString("userYear"),
                                                 new ArrayList<>(),
                                                 new ArrayList<>(),
-                                                new ArrayList<>()
-                                        );
+                                                new ArrayList<>());
                                         group.addMember(member);
 
                                         // Load join and end dates
@@ -387,8 +382,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                                 rs.getString("userYear"),
                                 new ArrayList<>(),
                                 new ArrayList<>(),
-                                new ArrayList<>()
-                        ));
+                                new ArrayList<>()));
                     }
                     return members;
                 });
@@ -467,8 +461,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                         rs.getString("userYear"),
                         new ArrayList<>(),
                         new ArrayList<>(),
-                        new ArrayList<>()
-                ) : null);
+                        new ArrayList<>()) : null);
     }
 
     @Override
@@ -776,8 +769,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                     rs.getString("userYear"),
                     new ArrayList<>(),
                     new ArrayList<>(),
-                    new ArrayList<>()
-            ));
+                    new ArrayList<>()));
         }
         return students;
     }
@@ -808,8 +800,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                                 rs.getString("userYear"),
                                 new ArrayList<>(),
                                 new ArrayList<>(),
-                                new ArrayList<>()
-                        );
+                                new ArrayList<>());
                     }
                     return null;
                 });
