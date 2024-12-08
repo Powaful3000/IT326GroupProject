@@ -255,23 +255,26 @@ public class TerminalUI {
     }
 
     private void showGroupsMenu() {
-        System.out.println("\nClass Groups");
-        System.out.println("------------------------");
-        System.out.println("1. View My Groups");
-        System.out.println("2. View All Groups");
-        System.out.println("3. Join Group");
-        System.out.println("4. Create Group");
-        System.out.println("5. Leave Group");
-        System.out.println("6. Back");
+        boolean inGroupsMenu = true;
+        while (inGroupsMenu) {
+            System.out.println("\nClass Groups");
+            System.out.println("------------------------");
+            System.out.println("1. View My Groups");
+            System.out.println("2. View All Groups");
+            System.out.println("3. Join Group");
+            System.out.println("4. Create Group");
+            System.out.println("5. Leave Group");
+            System.out.println("6. Back");
 
-        int choice = getIntInput(1, 6);
-        switch (choice) {
-            case 1 -> viewGroups();
-            case 2 -> viewAllGroups();
-            case 3 -> joinGroup();
-            case 4 -> createGroup();
-            case 5 -> leaveGroup();
-            case 6 -> {} // Return to main menu
+            int choice = getIntInput(1, 6);
+            switch (choice) {
+                case 1 -> viewGroups();
+                case 2 -> viewAllGroups();
+                case 3 -> joinGroup();
+                case 4 -> createGroup();
+                case 5 -> leaveGroup();
+                case 6 -> inGroupsMenu = false; // Return to main menu
+            }
         }
     }
 
