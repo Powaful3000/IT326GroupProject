@@ -126,12 +126,31 @@ public class TerminalUI {
             "StudentDB"
         );
         this.dbHandler = new DatabaseHandler(database);
+        
+        // Establish database connection immediately
+        try {
+            database.connect();
+            System.out.println("Successfully connected to database.");
+        } catch (RuntimeException e) {
+            System.err.println("Failed to connect to database: " + e.getMessage());
+            System.err.println("Please check your database configuration and try again.");
+            System.exit(1);  // Exit if we can't connect to the database
+        }
+        
         this.scanner = new Scanner(System.in);
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
         this.postHandler = new PostHandler();
         this.tagHandler = new TagHandler();
         this.isRunning = true;
+
+        // Add shutdown hook for cleanup
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (dbHandler != null) {
+                dbHandler.getDatabase().disconnect();
+                System.out.println("Database connection closed.");
+            }
+        }));
     }
 
     public void start() {
