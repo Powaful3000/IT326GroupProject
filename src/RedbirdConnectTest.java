@@ -9,6 +9,11 @@ public class RedbirdConnectTest {
 
     @Before
     public void init() {
+        Tag t1 = new Tag(0, "name", "description");
+        Tag t2;
+        Group g1 = new Group(0, "name","description");
+        Group g2;
+
         List<Tag> xavierTags = Arrays.asList(
             new Tag("IT"),
             new Tag("OffCampus")
