@@ -30,8 +30,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             + " WHERE userName = ?";
     private static final String SQL_INSERT_STUDENT = "INSERT INTO students (userName, password, userYear) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_STUDENT = "DELETE FROM " + TABLE_STUDENTS + " WHERE userID = ?";
-    private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS
-            + " (postID, postContent, postOwner) VALUES (?, ?, ?)";
+    private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS + " (postID, postContent, postOwner) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_POST = "DELETE FROM " + TABLE_POSTS + " WHERE postID = ?";
     private static final String SQL_INSERT_GROUP = "INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) VALUES (?, ?, ?, DEFAULT, DEFAULT)";
     private static final String SQL_SELECT_GROUP_MEMBERS = "SELECT s.* FROM " + TABLE_STUDENTS + " s JOIN "
@@ -59,16 +58,15 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_GET_STUDENT_TAGS = "SELECT t.* FROM " + TABLE_TAGS + " t JOIN " + TABLE_STUDENT_TAGS
             +
             " st ON t.tagID = st.tagID WHERE st.studentID = ?";
-    private static final String SQL_ADD_POST_TO_GROUP = "INSERT INTO " + TABLE_POST_GROUPS
-            + " (postID, groupID) VALUES (?, ?)";
+    private static final String SQL_ADD_POST_TO_GROUP = "INSERT INTO " + TABLE_POST_GROUPS + " (postID, groupID) VALUES (?, ?)";
     private static final String SQL_UPDATE_MEMBERSHIP_END_DATE = "UPDATE " + TABLE_MEMBERSHIPS
             + " SET endDate = ? WHERE studentID = ? AND groupID = ?";
     private static final String SQL_UPDATE_POST = "UPDATE " + TABLE_POSTS + " SET postContent = ? WHERE postID = ?";
     private static final String SQL_UPDATE_GROUP_END_DATE = "UPDATE " + TABLE_MEMBERSHIPS +
             " SET endDate = CURRENT_TIMESTAMP " +
             "WHERE studentID = ? AND groupID = ? AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
-    private static final String SQL_LEAVE_GROUP = "DELETE FROM " + TABLE_MEMBERSHIPS
-            + " WHERE studentID = ? AND groupID = ?";
+    private static final String SQL_LEAVE_GROUP = "DELETE FROM " + TABLE_MEMBERSHIPS + 
+        " WHERE studentID = ? AND groupID = ?";
     private static final String SQL_CHECK_TAG_EXISTS = "SELECT COUNT(*) FROM " + TABLE_TAGS
             + " WHERE name = ? AND description = ?";
 
@@ -111,14 +109,14 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_ADD_GROUP_MEMBER = "INSERT INTO " + TABLE_MEMBERSHIPS
             + " (groupID, studentID, joinDate) VALUES (?, ?, ?)";
 
-    private static final String SQL_CHECK_GROUP_MEMBERSHIP = "SELECT COUNT(*) FROM group_memberships WHERE studentID = ? AND groupID = ? "
-            +
-            "AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
+    private static final String SQL_CHECK_GROUP_MEMBERSHIP = "SELECT COUNT(*) FROM " + TABLE_MEMBERSHIPS + 
+        " WHERE studentID = ? AND groupID = ? AND (endDate IS NULL OR endDate > CURRENT_TIMESTAMP)";
 
     private static final String SQL_JOIN_GROUP = "INSERT INTO " + TABLE_MEMBERSHIPS
             + " (studentID, groupID, joinDate) VALUES (?, ?, CURRENT_TIMESTAMP)";
 
-    private static final String SQL_GET_GROUP_POSTS = "SELECT p.* FROM posts p JOIN post_groups pg ON p.id = pg.post_id WHERE pg.group_id = ?";
+    private static final String SQL_GET_GROUP_POSTS = "SELECT p.* FROM " + TABLE_POSTS + " p JOIN " + TABLE_POST_GROUPS + 
+        " pg ON p.postID = pg.postID WHERE pg.groupID = ? ORDER BY p.postDate DESC";
 
     // Add with other SQL constants at the top
     private static final String SQL_FIND_GROUP_BY_NAME = "SELECT * FROM " + TABLE_GROUPS + " WHERE groupName = ?";
@@ -129,6 +127,11 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     // Add this constant with other SQL constants
     private static final String SQL_GET_MAX_GROUP_ID = "SELECT MAX(groupID) FROM " + TABLE_GROUPS;
+
+    private static final String SQL_GET_MAX_POST_ID = "SELECT MAX(postID) FROM " + TABLE_POSTS;
+
+    private static final String SQL_GET_STUDENT_GROUPS = "SELECT g.* FROM " + TABLE_GROUPS + " g JOIN " + 
+        TABLE_MEMBERSHIPS + " m ON g.groupID = m.groupID WHERE m.studentID = ? AND (m.endDate IS NULL OR m.endDate > CURRENT_TIMESTAMP)";
 
     // Constructor
     public MySQLHandler(String dbName) {
@@ -218,12 +221,22 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     @Override
     public boolean createPost(Post post) {
         try {
-            String query = "INSERT INTO posts (id, content, owner_id) VALUES (?, ?, ?)";
+            // Generate and set a new unique ID
+            int newId = generateUniquePostId();
+            post.setID(newId);
+
+            // First insert the post
+            String query = "INSERT INTO posts (postID, postContent, postOwner) VALUES (?, ?, ?)";
             try (PreparedStatement stmt = connection.prepareStatement(query)) {
                 stmt.setInt(1, post.getID());
                 stmt.setString(2, post.getContent());
                 stmt.setInt(3, post.getOwner().getID());
                 stmt.executeUpdate();
+
+                // If post has a group, associate it with the group
+                if (post.getGroup() != null) {
+                    return addPostToGroup(post.getID(), post.getGroup().getID());
+                }
                 return true;
             }
         } catch (SQLException e) {
@@ -256,7 +269,6 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         System.out.println("Attempting authentication:");
         System.out.println("- Username: " + username);
         System.out.println("- Password hash: " + hashPassword(password));
-        System.out.println("- SQL Query: " + SQL_AUTHENTICATE_STUDENT);
 
         return executeQuery(
                 SQL_AUTHENTICATE_STUDENT,
@@ -266,20 +278,35 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 },
                 rs -> {
                     if (rs.next()) {
-                        // Debug stored values
-                        System.out.println("\nDatabase record found:");
-                        System.out.println("- Stored username: " + rs.getString("userName"));
-                        System.out.println("- Stored password hash: " + rs.getString("password"));
-
+                        // Create student object
                         Student student = new Student(
                                 rs.getInt("userID"),
-                                username, // Changed from null to username
+                                username,
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
                                 new ArrayList<>(),
                                 new ArrayList<>(),
                                 new ArrayList<>());
-                        System.out.println("Authentication successful!");
+
+                        // Load student's groups
+                        List<Group> groups = executeQuery(
+                            SQL_GET_STUDENT_GROUPS,
+                            groupStmt -> groupStmt.setInt(1, student.getID()),
+                            groupRs -> {
+                                List<Group> studentGroups = new ArrayList<>();
+                                while (groupRs.next()) {
+                                    Group group = new Group(
+                                        groupRs.getInt("groupID"),
+                                        groupRs.getString("groupName"),
+                                        groupRs.getString("groupDescription")
+                                    );
+                                    studentGroups.add(group);
+                                }
+                                return studentGroups;
+                            }
+                        );
+                        student.setGroups(groups);
+                        System.out.println("Authentication successful! Loaded " + groups.size() + " groups.");
                         return student;
                     }
                     System.out.println("No matching record found");
@@ -568,19 +595,26 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 });
     }
 
-    public boolean leaveGroup(Group group, Student student) {
+    @Override
+    public boolean leaveGroup(int studentId, int groupId) {
         boolean success = executeUpdate(
-                SQL_LEAVE_GROUP,
-                stmt -> {
-                    stmt.setInt(1, student.getID());
-                    stmt.setInt(2, group.getID());
-                    System.out.println("Student " + student.getName() + " leaving group: " + group.getName());
-                });
+            SQL_LEAVE_GROUP,
+            stmt -> {
+                stmt.setInt(1, studentId);
+                stmt.setInt(2, groupId);
+                System.out.println("Removing student " + studentId + " from group " + groupId);
+            }
+        );
         if (success) {
             // Update the group size after a member leaves
-            updateGroupSize(group.getID());
+            updateGroupSize(groupId);
         }
         return success;
+    }
+
+    @Override
+    public boolean leaveGroup(Group group, Student student) {
+        return leaveGroup(student.getID(), group.getID());
     }
 
     public boolean containsTag(Tag tag) {
@@ -881,19 +915,49 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     @Override
     public List<Post> getGroupPosts(int groupId) {
-        return executeQuery(SQL_GET_GROUP_POSTS,
-                stmt -> stmt.setInt(1, groupId),
-                this::mapResultSetToPostList);
+        return executeQuery(
+            SQL_GET_GROUP_POSTS,
+            stmt -> stmt.setInt(1, groupId),
+            rs -> {
+                List<Post> posts = new ArrayList<>();
+                while (rs.next()) {
+                    Student owner = getStudentById(rs.getInt("postOwner"));
+                    Post post = new Post(
+                        rs.getInt("postID"),
+                        rs.getString("postContent"),
+                        owner,
+                        getGroupByID(groupId)
+                    );
+                    posts.add(post);
+                }
+                return posts;
+            }
+        );
+    }
+
+    @Override
+    public Group getGroupByID(int groupId) {
+        return executeQuery(
+            "SELECT * FROM " + TABLE_GROUPS + " WHERE groupID = ?",
+            stmt -> stmt.setInt(1, groupId),
+            rs -> rs.next() ? new Group(
+                rs.getInt("groupID"),
+                rs.getString("groupName"),
+                rs.getString("groupDescription")
+            ) : null
+        );
     }
 
     @Override
     public boolean isStudentInGroup(int studentId, int groupId) {
-        return executeQuery(SQL_CHECK_GROUP_MEMBERSHIP,
-                stmt -> {
-                    stmt.setInt(1, studentId);
-                    stmt.setInt(2, groupId);
-                },
-                rs -> rs.next() && rs.getInt(1) > 0);
+        return executeQuery(
+            SQL_CHECK_GROUP_MEMBERSHIP,
+            stmt -> {
+                stmt.setInt(1, studentId);
+                stmt.setInt(2, groupId);
+            },
+            rs -> rs.next() && rs.getInt(1) > 0
+        );
     }
 
     @Override
@@ -906,24 +970,63 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 });
     }
 
-    @Override
-    public boolean leaveGroup(int studentId, int groupId) {
-        return executeUpdate(SQL_LEAVE_GROUP,
-                stmt -> {
-                    stmt.setInt(1, studentId);
-                    stmt.setInt(2, groupId);
-                    System.out.println("Removing student " + studentId + " from group " + groupId);
-                });
-    }
+    // @Override
+    // public boolean leaveGroup(int studentId, int groupId) {
+    //     return executeUpdate(SQL_LEAVE_GROUP,
+    //             stmt -> {
+    //                 stmt.setInt(1, studentId);
+    //                 stmt.setInt(2, groupId);
+    //                 System.out.println("Removing student " + studentId + " from group " + groupId);
+    //             });
+    // }
 
     @Override
     public Group findGroupByName(String groupName) {
         return executeQuery(SQL_FIND_GROUP_BY_NAME,
                 stmt -> stmt.setString(1, groupName),
-                rs -> rs.next() ? new Group(
-                        rs.getInt("groupID"),
-                        rs.getString("groupName"),
-                        rs.getString("groupDescription")) : null);
+                rs -> {
+                    if (!rs.next()) return null;
+                    Group group = new Group(
+                            rs.getInt("groupID"),
+                            rs.getString("groupName"),
+                            rs.getString("groupDescription"));
+                    
+                    // Load members for this group
+                    executeQuery(
+                            SQL_SELECT_GROUP_MEMBERS_DETAILED,
+                            memberStmt -> memberStmt.setInt(1, group.getID()),
+                            memberRs -> {
+                                while (memberRs.next()) {
+                                    Student member = new Student(
+                                            memberRs.getInt("userID"),
+                                            null,
+                                            memberRs.getString("userName"),
+                                            memberRs.getString("userYear"),
+                                            new ArrayList<>(),
+                                            new ArrayList<>(),
+                                            new ArrayList<>());
+                                    group.addMember(member);
+
+                                    // Load join and end dates
+                                    Date joinDate = getMemberJoinDate(group.getID(), member.getID());
+                                    Date endDate = getMemberEndDate(group.getID(), member.getID());
+                                    if (joinDate != null) {
+                                        group.setMemberJoinDate(member, joinDate);
+                                    }
+                                    if (endDate != null) {
+                                        group.setMemberEndDate(member, endDate);
+                                    }
+                                }
+                                return group;
+                            });
+                    return group;
+                });
+    }
+
+    private int generateUniquePostId() {
+        return executeQuery(SQL_GET_MAX_POST_ID,
+                stmt -> {},
+                rs -> rs.next() ? rs.getInt(1) + 1 : 1);
     }
 
 }

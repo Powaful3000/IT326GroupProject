@@ -214,4 +214,9 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     public boolean leaveGroup(int studentId, int groupId) {
         return sqlHandler.leaveGroup(studentId, groupId);
     }
+
+    @Override
+    public Group getGroupByID(int groupId) {
+        return sqlHandler.getGroupByID(groupId);
+    }
 }

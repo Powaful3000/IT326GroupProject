@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 
 /*
@@ -119,6 +120,7 @@ public class TerminalUI {
     private Student currentUser;
     private boolean isRunning;
     private final DatabaseHandler dbHandler;
+    private Group currentGroup;
 
     public TerminalUI() {
         Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
@@ -264,18 +266,39 @@ public class TerminalUI {
             System.out.println("3. Join Group");
             System.out.println("4. Create Group");
             System.out.println("5. Leave Group");
-            System.out.println("6. Back");
+            System.out.println("6. Enter Group");
+            System.out.println("7. Back");
 
-            int choice = getIntInput(1, 6);
+            int choice = getIntInput(1, 7);
             switch (choice) {
                 case 1 -> viewGroups();
                 case 2 -> viewAllGroups();
                 case 3 -> joinGroup();
                 case 4 -> createGroup();
                 case 5 -> leaveGroup();
-                case 6 -> inGroupsMenu = false; // Return to main menu
+                case 6 -> enterGroup();
+                case 7 -> inGroupsMenu = false;
             }
         }
+    }
+
+    private void enterGroup() {
+        System.out.println("Enter group name to access: ");
+        String groupName = scanner.nextLine();
+        Group selectedGroup = groupHandler.findGroupByName(groupName);
+        
+        if (selectedGroup == null) {
+            System.out.println("Group not found.");
+            return;
+        }
+        
+        if (!selectedGroup.isMember(currentUser)) {
+            System.out.println("You must be a member of the group to access it.");
+            return;
+        }
+        
+        currentGroup = selectedGroup;
+        showPostsMenu();
     }
 
     private void viewGroups() {
@@ -377,9 +400,15 @@ public class TerminalUI {
         }
         
         if (currentUser.getGroups().contains(groupToLeave)) {
-            currentUser.leaveGroup(groupToLeave);
+            // Update both database and in-memory state
+            if (dbHandler.leaveGroup(groupToLeave, currentUser)) {
+                currentUser.leaveGroup(groupToLeave);
+                System.out.println("Successfully left group: " + groupToLeave.getName());
+            } else {
+                System.out.println("Failed to leave group. Please try again.");
+            }
         } else {
-            System.out.println("Student is not in this group");
+            System.out.println("You are not a member of this group");
         }
     }
     
@@ -503,5 +532,180 @@ public class TerminalUI {
         isRunning = false;
         System.out.println("Thank you for using Redbird Connect!");
         scanner.close();
+    }
+
+    private void showPostsMenu() {
+        boolean inPostsMenu = true;
+        while (inPostsMenu) {
+            System.out.println("\nPosts");
+            System.out.println("------------------------");
+            System.out.println("1. View All Posts");
+            System.out.println("2. Create Post");
+            System.out.println("3. My Posts");
+            System.out.println("4. Bookmarked Posts");
+            System.out.println("5. Back");
+
+            int choice = getIntInput(1, 5);
+            switch (choice) {
+                case 1 -> viewAllPosts();
+                case 2 -> createPost();
+                case 3 -> viewMyPosts();
+                case 4 -> viewBookmarkedPosts();
+                case 5 -> inPostsMenu = false;
+            }
+        }
+    }
+
+    private void viewAllPosts() {
+        if (currentGroup == null) {
+            System.out.println("No group selected.");
+            return;
+        }
+
+        System.out.println("\nAll Posts in " + currentGroup.getName());
+        System.out.println("------------------------");
+        
+        List<Post> posts = dbHandler.getGroupPosts(currentGroup.getID());
+        
+        if (posts.isEmpty()) {
+            System.out.println("No posts in this group yet.");
+        } else {
+            for (Post post : posts) {
+                System.out.println("\nPost by " + post.getOwner().getName() + ":");
+                System.out.println(post.getContent());
+            }
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void createPost() {
+        if (currentGroup == null) {
+            System.out.println("No group selected.");
+            return;
+        }
+
+        // Verify group membership
+        if (!dbHandler.isStudentInGroup(currentUser.getID(), currentGroup.getID())) {
+            System.out.println("You must be a member of the group to create posts.");
+            return;
+        }
+
+        System.out.println("\nCreate New Post");
+        System.out.println("------------------------");
+        System.out.print("Enter post content:\n");
+        String content = scanner.nextLine();
+
+        if (content.trim().isEmpty()) {
+            System.out.println("Post content cannot be empty.");
+            return;
+        }
+
+        // Create new post with the current group context
+        Post newPost = new Post(0, content, currentUser, currentGroup); // ID will be set by database
+        
+        try {
+            // First create in database to get the ID
+            if (dbHandler.createPost(newPost)) {
+                // Then add to post handler with the assigned ID
+                if (postHandler.addPost(newPost)) {
+                    System.out.println("Post created successfully!");
+                } else {
+                    System.out.println("Failed to add post to memory cache.");
+                }
+            } else {
+                System.out.println("Failed to create post in database.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error creating post: " + e.getMessage());
+        }
+    }
+
+    private void viewMyPosts() {
+        if (currentGroup == null) {
+            System.out.println("No group selected.");
+            return;
+        }
+
+        System.out.println("\nYour Posts in " + currentGroup.getName());
+        System.out.println("------------------------");
+        
+        List<Post> allPosts = dbHandler.getGroupPosts(currentGroup.getID());
+        List<Post> myPosts = allPosts.stream()
+            .filter(post -> post.getOwner().getID() == currentUser.getID())
+            .collect(Collectors.toList());
+        
+        if (myPosts.isEmpty()) {
+            System.out.println("You haven't made any posts in this group yet.");
+        } else {
+            for (Post post : myPosts) {
+                System.out.println("\nPost:");
+                System.out.println(post.getContent());
+            }
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void viewBookmarkedPosts() {
+        List<Post> bookmarked = dbHandler.getBookmarkedPosts(currentUser.getID());
+        if (bookmarked.isEmpty()) {
+            System.out.println("No bookmarked posts.");
+            return;
+        }
+
+        System.out.println("\nBookmarked Posts:");
+        for (Post post : bookmarked) {
+            displayPost(post);
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void displayPost(Post post) {
+        System.out.println("\n------------------------");
+        String authorName = post.getOwner().isAnonymous() ? "Anonymous" : post.getOwner().getName();
+        System.out.println("Author: " + authorName);
+        System.out.println("Group: " + post.getGroup().getName());
+        System.out.println("Content: " + post.getContent());
+        System.out.println("------------------------");
+    }
+
+    private void editPost(Post post) {
+        System.out.println("Enter new content:");
+        String newContent = scanner.nextLine();
+        
+        if (newContent.trim().isEmpty()) {
+            System.out.println("Post content cannot be empty.");
+            return;
+        }
+
+        post.setContent(newContent);
+        if (postHandler.updatePostContent(post.getID(), newContent) && dbHandler.editPost(post)) {
+            System.out.println("Post updated successfully!");
+        } else {
+            System.out.println("Failed to update post.");
+        }
+    }
+
+    private void deletePost(Post post) {
+        System.out.println("Are you sure you want to delete this post? (y/n)");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+        
+        if (confirm.equals("y")) {
+            if (postHandler.removePost(post.getID())) {
+                System.out.println("Post deleted successfully!");
+            } else {
+                System.out.println("Failed to delete post.");
+            }
+        }
+    }
+
+    private int generateUniquePostId() {
+        // Simple implementation - should be replaced with database auto-increment
+        return (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
     }
 }

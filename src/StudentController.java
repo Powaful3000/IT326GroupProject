@@ -232,16 +232,44 @@ public class StudentController {
 
     public boolean joinGroup(int groupId) {
         Student currentStudent = studentHandler.getCurrentStudent();
-        if (currentStudent != null) {
-            return dbHandler.joinGroup(currentStudent.getID(), groupId);
+        if (currentStudent == null) {
+            System.err.println("No student currently logged in");
+            return false;
+        }
+
+        // First try to join in database
+        if (dbHandler.joinGroup(currentStudent.getID(), groupId)) {
+            // If successful, get the group and add it to student's groups
+            Group group = dbHandler.getGroupByID(groupId);
+            if (group != null) {
+                currentStudent.joinGroup(group);
+                System.out.println("Successfully joined group: " + group.getName());
+                return true;
+            }
         }
         return false;
     }
 
     public boolean leaveGroup(int groupId) {
         Student currentStudent = studentHandler.getCurrentStudent();
-        if (currentStudent != null) {
-            return dbHandler.leaveGroup(currentStudent.getID(), groupId);
+        if (currentStudent == null) {
+            System.err.println("No student currently logged in");
+            return false;
+        }
+
+        // First try to leave in database
+        if (dbHandler.leaveGroup(currentStudent.getID(), groupId)) {
+            // If successful, find and remove the group from student's groups
+            Group groupToLeave = currentStudent.getGroups().stream()
+                .filter(g -> g.getID() == groupId)
+                .findFirst()
+                .orElse(null);
+                
+            if (groupToLeave != null) {
+                currentStudent.leaveGroup(groupToLeave);
+                System.out.println("Successfully left group: " + groupToLeave.getName());
+                return true;
+            }
         }
         return false;
     }

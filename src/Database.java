@@ -77,4 +77,6 @@ public abstract class Database {
     public abstract boolean leaveGroup(int studentId, int groupId);
 
     public abstract Group findGroupByName(String groupName);
+
+    public abstract Group getGroupByID(int groupId);
 }
