@@ -41,7 +41,8 @@ public class StudentController {
         }
 
         // Create and add the student
-        Student newStudent = new Student(id, name, year, null, null, null);
+        Student newStudent = new Student(id, null, name, year, 
+            new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         boolean success = studentHandler.addStudent(newStudent);
 
         if (success) {

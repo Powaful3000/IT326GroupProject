@@ -276,9 +276,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                     if (rs.next()) {
                         Student student = new Student(
                                 rs.getInt("userID"),
+                                null,
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
-                                null, null, null);
+                                new ArrayList<>(),
+                                new ArrayList<>(),
+                                new ArrayList<>()
+                        );
                         System.out.println("Debug - Authentication successful for: " + username);
                         return student;
                     }
@@ -341,9 +345,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                                     while (memberRs.next()) {
                                         Student member = new Student(
                                                 memberRs.getInt("userID"),
+                                                null,
                                                 memberRs.getString("userName"),
                                                 memberRs.getString("userYear"),
-                                                null, null, null);
+                                                new ArrayList<>(),
+                                                new ArrayList<>(),
+                                                new ArrayList<>()
+                                        );
                                         group.addMember(member);
 
                                         // Load join and end dates
@@ -374,9 +382,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                     while (rs.next()) {
                         members.add(new Student(
                                 rs.getInt("userID"),
+                                null,
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
-                                null, null, null));
+                                new ArrayList<>(),
+                                new ArrayList<>(),
+                                new ArrayList<>()
+                        ));
                     }
                     return members;
                 });
@@ -450,9 +462,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 stmt -> stmt.setString(1, username),
                 rs -> rs.next() ? new Student(
                         rs.getInt("userID"),
+                        null,
                         rs.getString("userName"),
                         rs.getString("userYear"),
-                        null, null, null) : null);
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                ) : null);
     }
 
     @Override
@@ -755,11 +771,12 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         while (rs.next()) {
             students.add(new Student(
                     rs.getInt("userID"),
+                    null,
                     rs.getString("userName"),
                     rs.getString("userYear"),
-                    new ArrayList<>(), // Tags will be loaded separately if needed
-                    new ArrayList<>(), // Groups will be loaded separately if needed
-                    new ArrayList<>() // Posts will be loaded separately if needed
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    new ArrayList<>()
             ));
         }
         return students;
@@ -786,11 +803,12 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                     if (rs.next()) {
                         return new Student(
                                 rs.getInt("userID"),
+                                null,
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
-                                new ArrayList<>(), // Tags will be loaded separately if needed
-                                new ArrayList<>(), // Groups will be loaded separately if needed
-                                new ArrayList<>() // Posts will be loaded separately if needed
+                                new ArrayList<>(),
+                                new ArrayList<>(),
+                                new ArrayList<>()
                         );
                     }
                     return null;

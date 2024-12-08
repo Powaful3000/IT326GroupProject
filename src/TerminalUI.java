@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.List;
 
 
 /*
@@ -249,19 +250,48 @@ public class TerminalUI {
     }
 
     private void viewGroups() {
-    	currentUser.getGroups();
+        System.out.println("\nYour Groups:");
+        System.out.println("------------------------");
+        
+        try {
+            List<Group> userGroups = currentUser.getGroups();
+            if (userGroups.isEmpty()) {
+                System.out.println("You are not a member of any groups.");
+            } else {
+                for (Group group : userGroups) {
+                    System.out.println("- " + group.getName() + ": " + group.getDescription());
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error retrieving groups: " + e.getMessage());
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
     
     private void joinGroup() {
-    	System.out.println("Enter desired group name to join: ");
-    	String name = scanner.nextLine();
-    	// fetch group with matching name and set to groupToJoin
-    	
-    	if (currentUser.getGroups().contains(groupToJoin)) {
-    		System.out.println("Student is already in this group");
-    	} else {
-    		currentUser.joinGroup(groupToJoin);
-    	}
+        System.out.println("Enter desired group name to join: ");
+        String name = scanner.nextLine();
+        
+        try {
+            Group groupToJoin = groupHandler.findGroupByName(name);
+            if (groupToJoin == null) {
+                System.out.println("Group not found.");
+                return;
+            }
+            
+            if (currentUser.getGroups().contains(groupToJoin)) {
+                System.out.println("Student is already in this group");
+            } else {
+                currentUser.joinGroup(groupToJoin);
+                // Update the database
+                groupHandler.addMemberToGroup(groupToJoin.getID(), currentUser);
+                System.out.println("Successfully joined group: " + groupToJoin.getName());
+            }
+        } catch (Exception e) {
+            System.out.println("Error joining group: " + e.getMessage());
+        }
     }
     
     private void createGroup() {
@@ -274,15 +304,19 @@ public class TerminalUI {
     }
     
     private void leaveGroup() {
-    	System.out.println("Enter desired group name to leave: ");
-    	String name = scanner.nextLine();
-    	// fetch group with matching name and set to groupToLeave
-    	if (currentUser.getGroups().contains(groupToLeave)) {
-    		currentUser.leaveGroup(groupToLeave);
-    	} else {
-    		System.out.println("Student is not in this group");
-    	}
-    	
+        System.out.println("Enter desired group name to leave: ");
+        String name = scanner.nextLine();
+        Group groupToLeave = groupHandler.findGroupByName(name);
+        if (groupToLeave == null) {
+            System.out.println("Group not found.");
+            return;
+        }
+        
+        if (currentUser.getGroups().contains(groupToLeave)) {
+            currentUser.leaveGroup(groupToLeave);
+        } else {
+            System.out.println("Student is not in this group");
+        }
     }
     
     // Helper method for getting validated integer input
