@@ -8,6 +8,9 @@ import java.util.Date;
 import java.util.List;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class MySQLHandler extends Database implements DatabaseOperations {
 
@@ -165,7 +168,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                         DatabaseConfig.getConnectionUrl(),
                         DatabaseConfig.DB_USER,
                         DatabaseConfig.DB_PASSWORD);
-                isConnected = true;
+                isConnected = connection != null && !connection.isClosed();
                 System.out.println("Connected to MySQL database: " + dbName);
             } catch (ClassNotFoundException | SQLException e) {
                 logError("Failed to connect to database: " + e.getMessage());
@@ -1146,6 +1149,95 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                     }
                     return null;
                 });
+    }
+
+    @Override
+    public boolean resetDatabase() {
+        try {
+            System.out.println("Resetting database...");
+            
+            // Read and execute the SQL script
+            try (BufferedReader reader = new BufferedReader(new FileReader("src/createDB.sql"))) {
+                String line;
+                StringBuilder statement = new StringBuilder();
+                
+                while ((line = reader.readLine()) != null) {
+                    // Skip comments and empty lines
+                    line = line.trim();
+                    if (line.isEmpty() || line.startsWith("--")) {
+                        continue;
+                    }
+                    
+                    statement.append(line).append(" ");
+                    
+                    // If the line ends with a semicolon, execute the statement
+                    if (line.endsWith(";")) {
+                        String sql = statement.toString().trim();
+                        try {
+                            executeUpdate(sql);
+                        } catch (Exception e) {
+                            System.err.println("Error executing statement: " + e.getMessage());
+                            // Continue with other statements even if one fails
+                        }
+                        statement.setLength(0); // Clear the statement buffer
+                    }
+                }
+            }
+            
+            System.out.println("Database reset complete!");
+            return true;
+            
+        } catch (IOException e) {
+            System.err.println("Failed to read SQL script: " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            System.err.println("Failed to reset database: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Add this method to execute SQL updates
+    @Override
+    public boolean executeUpdate(String sql) {
+        ensureConnected();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error executing SQL update: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Student> getAllStudents() {
+        return executeQuery(
+            "SELECT * FROM " + TABLE_STUDENTS,
+            stmt -> {}, // No parameters needed
+            rs -> {
+                List<Student> students = new ArrayList<>();
+                while (rs.next()) {
+                    students.add(new Student(
+                        rs.getInt("userID"),
+                        rs.getString("userName"),  // This is the email/username
+                        rs.getString("userName"),  // Using username as name since there's no separate name field
+                        rs.getString("userYear"),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                    ));
+                }
+                return students;
+            }
+        );
+    }
+
+    @Override
+    public boolean isConnected() {
+        try {
+            return connection != null && !connection.isClosed();
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
 }

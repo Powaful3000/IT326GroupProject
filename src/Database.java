@@ -81,4 +81,15 @@ public abstract class Database {
     public abstract Group getGroupByID(int groupId);
 
     public abstract boolean deletePost(int postId);
+
+    public abstract boolean executeUpdate(String sql);
+
+    // Add abstract method for database reset
+    public abstract boolean resetDatabase();
+
+    protected boolean isConnected = false;
+
+    public boolean isConnected() {
+        return isConnected;
+    }
 }

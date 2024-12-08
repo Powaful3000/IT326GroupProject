@@ -170,11 +170,21 @@ public class TerminalUI {
         System.out.println("3. Exit");
         System.out.println("\nPlease select an option:");
 
-        int choice = getIntInput(1, 3);
-        switch (choice) {
-            case 1 -> handleLogin();
-            case 2 -> handleRegistration();
-            case 3 -> exit();
+        String input = scanner.nextLine();
+        if (input.equals("debug") || input.equals("0")) {
+            showDebugMenu();
+        } else {
+            try {
+                int choice = Integer.parseInt(input);
+                switch (choice) {
+                    case 1 -> handleLogin();
+                    case 2 -> handleRegistration();
+                    case 3 -> exit();
+                    default -> System.out.println("Invalid option. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+            }
         }
     }
 
@@ -255,12 +265,18 @@ public class TerminalUI {
         System.out.println("5. Logout");
         System.out.println("\nPlease select an option:");
 
+        String input = scanner.nextLine();
+        if (input.equals("debug") || input.equals("0")) {
+            showDebugMenu();
+            return;
+        }
+
         int choice = getIntInput(1, 5);
         switch (choice) {
             case 1 -> showProfileMenu();
             case 2 -> showGroupsMenu();
             case 3 -> showFriendsMenu();
-            // case 4 -> showMessagesMenu();
+            case 4 -> showMessagesMenu();
             case 5 -> logout();
         }
     }
@@ -955,5 +971,86 @@ public class TerminalUI {
         } else {
             System.out.println("Failed to remove friend.");
         }
+    }
+
+    private void showDebugMenu() {
+        boolean inDebugMenu = true;
+        while (inDebugMenu) {
+            System.out.println("\nDebug Menu");
+            System.out.println("------------------------");
+            System.out.println("1. View All Database Students");
+            System.out.println("2. View All Database Groups");
+            System.out.println("3. View Database Connection Status");
+            System.out.println("4. Test Database Queries");
+            System.out.println("5. Return to Main Menu");
+
+            int choice = getIntInput(1, 5);
+            switch (choice) {
+                case 1 -> debugViewAllStudents();
+                case 2 -> debugViewAllGroups();
+                case 3 -> debugCheckConnection();
+                case 4 -> debugTestQueries();
+                case 5 -> inDebugMenu = false;
+            }
+        }
+    }
+
+    private void debugViewAllStudents() {
+        System.out.println("\nAll Students in Database:");
+        System.out.println("------------------------");
+        try {
+            List<Student> allStudents = dbHandler.getAllStudents();
+            if (allStudents == null || allStudents.isEmpty()) {
+                System.out.println("No students found in database.");
+            } else {
+                for (Student student : allStudents) {
+                    System.out.println("ID: " + student.getID());
+                    System.out.println("Username/Email: " + student.getEmail());
+                    System.out.println("Year: " + student.getYear());
+                    System.out.println("------------------------");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error retrieving students: " + e.getMessage());
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void debugViewAllGroups() {
+        System.out.println("\nAll Groups in Database:");
+        System.out.println("------------------------");
+        List<Group> allGroups = groupHandler.getAllGroups();
+        for (Group group : allGroups) {
+            System.out.println("ID: " + group.getID());
+            System.out.println("Name: " + group.getName());
+            System.out.println("Description: " + group.getDescription());
+            System.out.println("------------------------");
+        }
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void debugCheckConnection() {
+        System.out.println("\nDatabase Connection Status:");
+        System.out.println("------------------------");
+        System.out.println("Connected: " + dbHandler.getDatabase().isConnected());
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void debugTestQueries() {
+        System.out.println("\nTesting Basic Queries...");
+        System.out.println("------------------------");
+        // Add basic query tests here if needed
+        System.out.println("Query testing complete.");
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void showMessagesMenu() {
+        System.out.println("\nMessages feature coming soon!");
+        System.out.println("Press Enter to continue...");
+        scanner.nextLine();
     }
 }

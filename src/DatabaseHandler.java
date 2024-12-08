@@ -1,5 +1,8 @@
 import java.util.List;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class DatabaseHandler extends Database implements DatabaseOperations {
     private final MySQLHandler sqlHandler;
@@ -256,5 +259,19 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     @Override
     public boolean isUserBlocked(int blockerId, int blockedId) {
         return sqlHandler.isUserBlocked(blockerId, blockedId);
+    }
+
+    @Override
+    public boolean resetDatabase() {
+        return sqlHandler.resetDatabase();
+    }
+
+    @Override
+    public boolean executeUpdate(String sql) {
+        return sqlHandler.executeUpdate(sql);
+    }
+
+    public List<Student> getAllStudents() {
+        return sqlHandler.getAllStudents();
     }
 }
