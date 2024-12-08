@@ -133,6 +133,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_GET_STUDENT_GROUPS = "SELECT g.* FROM " + TABLE_GROUPS + " g JOIN " + 
         TABLE_MEMBERSHIPS + " m ON g.groupID = m.groupID WHERE m.studentID = ? AND (m.endDate IS NULL OR m.endDate > CURRENT_TIMESTAMP)";
 
+    // Add these SQL constants with the others at the top
+    private static final String SQL_CHECK_PENDING_REQUEST = "SELECT * FROM friend_requests WHERE from_user_id = ? AND to_user_id = ? AND status = 'PENDING'";
+    private static final String SQL_GET_INCOMING_REQUESTS = "SELECT s.* FROM students s JOIN friend_requests fr ON s.userID = fr.from_user_id WHERE fr.to_user_id = ? AND fr.status = 'PENDING'";
+    private static final String SQL_ACCEPT_REQUEST = "UPDATE friend_requests SET status = 'ACCEPTED' WHERE from_user_id = ? AND to_user_id = ? AND status = 'PENDING'";
+    private static final String SQL_DECLINE_REQUEST = "UPDATE friend_requests SET status = 'DECLINED' WHERE from_user_id = ? AND to_user_id = ? AND status = 'PENDING'";
+    private static final String SQL_CHECK_BLOCKED = "SELECT * FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+
     // Constructor
     public MySQLHandler(String dbName) {
         super(dbName);
@@ -1037,6 +1044,61 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 stmt.setInt(1, postId);
                 System.out.println("Deleting post with ID: " + postId);
             }
+        );
+    }
+
+    @Override
+    public boolean hasPendingFriendRequest(int senderId, int receiverId) {
+        return executeQuery(
+            SQL_CHECK_PENDING_REQUEST,
+            stmt -> {
+            stmt.setInt(1, senderId);
+            stmt.setInt(2, receiverId);
+            },
+            ResultSet::next
+        );
+    }
+
+    @Override
+    public boolean acceptFriendRequest(int requesterId, int accepterId) {
+        return executeUpdate(
+            SQL_ACCEPT_REQUEST,
+            stmt -> {
+            stmt.setInt(1, requesterId);
+            stmt.setInt(2, accepterId);
+        }
+        );
+    }
+
+    @Override
+    public boolean declineFriendRequest(int requesterId, int declinerId) {
+        return executeUpdate(
+            SQL_DECLINE_REQUEST,
+            stmt -> {
+            stmt.setInt(1, requesterId);
+            stmt.setInt(2, declinerId);
+        }
+        );
+    }
+
+    @Override
+    public boolean isUserBlocked(int blockerId, int blockedId) {
+        return executeQuery(
+            SQL_CHECK_BLOCKED,
+            stmt -> {
+            stmt.setInt(1, blockerId);
+            stmt.setInt(2, blockedId);
+            },
+            ResultSet::next
+        );
+    }
+
+    @Override
+    public List<Student> getIncomingFriendRequests(int studentId) {
+        return executeQuery(
+            SQL_GET_INCOMING_REQUESTS,
+            stmt -> stmt.setInt(1, studentId),
+            this::mapResultSetToStudentList
         );
     }
 

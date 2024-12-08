@@ -66,4 +66,10 @@ public interface DatabaseOperations {
     boolean updateStudentPassword(int studentId, String newPassword);
 
     List<Post> getGroupPosts(int groupId);
+
+    boolean hasPendingFriendRequest(int senderId, int receiverId);
+    List<Student> getIncomingFriendRequests(int studentId);
+    boolean acceptFriendRequest(int requesterId, int accepterId);
+    boolean declineFriendRequest(int requesterId, int declinerId);
+    boolean isUserBlocked(int blockerId, int blockedId);
 }

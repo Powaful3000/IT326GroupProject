@@ -24,10 +24,12 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
         // Connection is managed by MySQLHandler singleton, no need to disconnect here
     }
 
+    @Override
     public boolean addStudent(Student student, String password) {
         return sqlHandler.addStudent(student, password);
     }
 
+    @Override
     public Student getStudentByUsername(String username) {
         return sqlHandler.getStudentByUsername(username);
     }
@@ -41,22 +43,27 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
         return sqlHandler.updateStudent(id, newName, newYear);
     }
 
+    @Override
     public boolean removeStudent(int id) {
         return sqlHandler.removeStudent(id);
     }
 
+    @Override
     public Student authenticateStudent(String username, String password) {
         return sqlHandler.authenticateStudent(username, password);
     }
 
+    @Override
     public boolean doesUsernameExist(String username) {
         return sqlHandler.doesUsernameExist(username);
     }
 
+    @Override
     public List<Group> getAllGroups() {
         return sqlHandler.getAllGroups();
     }
 
+    @Override
     public boolean addGroup(Group group) {
         System.out.println("\n====== DatabaseHandler Debug ======");
         System.out.println("Forwarding addGroup call to MySQLHandler");
@@ -66,7 +73,7 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
         System.out.println("- Description: " + group.getDescription());
         return sqlHandler.addGroup(group);
     }
-
+    @Override
     public boolean addMemberToGroup(int groupId, int studentId) {
         return sqlHandler.addMemberToGroup(groupId, studentId);
     }
@@ -223,5 +230,30 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     @Override
     public boolean deletePost(int postId) {
         return sqlHandler.deletePost(postId);
+    }
+
+    @Override
+    public boolean hasPendingFriendRequest(int senderId, int receiverId) {
+        return sqlHandler.hasPendingFriendRequest(senderId, receiverId);
+    }
+
+    @Override
+    public List<Student> getIncomingFriendRequests(int studentId) {
+        return sqlHandler.getIncomingFriendRequests(studentId);
+    }
+
+    @Override
+    public boolean acceptFriendRequest(int requesterId, int accepterId) {
+        return sqlHandler.acceptFriendRequest(requesterId, accepterId);
+    }
+
+    @Override
+    public boolean declineFriendRequest(int requesterId, int declinerId) {
+        return sqlHandler.declineFriendRequest(requesterId, declinerId);
+    }
+
+    @Override
+    public boolean isUserBlocked(int blockerId, int blockedId) {
+        return sqlHandler.isUserBlocked(blockerId, blockedId);
     }
 }
