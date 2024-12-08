@@ -41,8 +41,8 @@ public class StudentController {
         }
 
         // Create and add the student
-        Student newStudent = new Student(id, null, name, year, 
-            new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+        Student newStudent = new Student(id, null, name, year,
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         boolean success = studentHandler.addStudent(newStudent);
 
         if (success) {
@@ -261,10 +261,10 @@ public class StudentController {
         if (dbHandler.leaveGroup(currentStudent.getID(), groupId)) {
             // If successful, find and remove the group from student's groups
             Group groupToLeave = currentStudent.getGroups().stream()
-                .filter(g -> g.getID() == groupId)
-                .findFirst()
-                .orElse(null);
-                
+                    .filter(g -> g.getID() == groupId)
+                    .findFirst()
+                    .orElse(null);
+
             if (groupToLeave != null) {
                 currentStudent.leaveGroup(groupToLeave);
                 System.out.println("Successfully left group: " + groupToLeave.getName());
