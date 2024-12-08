@@ -247,7 +247,7 @@ public class TerminalUI {
         switch (choice) {
             case 1 -> showProfileMenu();
             case 2 -> showGroupsMenu();
-            //case 3 -> showFriendsMenu();
+            case 3 -> showFriendsMenu();
             //case 4 -> showMessagesMenu();
             case 5 -> logout();
         }
@@ -818,5 +818,200 @@ public class TerminalUI {
     private int generateUniquePostId() {
         // Simple implementation - should be replaced with database auto-increment
         return (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
+    }
+
+    private void showFriendsMenu() {
+        boolean inFriendsMenu = true;
+        while (inFriendsMenu) {
+            System.out.println("\nFriends");
+            System.out.println("------------------------");
+            System.out.println("1. View Friends List");
+            System.out.println("2. Send Friend Request");
+            System.out.println("3. View Pending Requests");
+            System.out.println("4. Block User");
+            System.out.println("5. Remove Friend");
+            System.out.println("6. Back");
+
+            int choice = getIntInput(1, 6);
+            switch (choice) {
+                case 1 -> viewFriendsList();
+                case 2 -> sendFriendRequest();
+                case 3 -> viewPendingRequests();
+                case 4 -> blockUser();
+                case 5 -> removeFriend();
+                case 6 -> inFriendsMenu = false;
+            }
+        }
+    }
+
+    private void viewFriendsList() {
+        System.out.println("\nYour Friends:");
+        System.out.println("------------------------");
+        List<Student> friends = dbHandler.getFriends(currentUser.getID());
+        
+        if (friends.isEmpty()) {
+            System.out.println("You don't have any friends yet.");
+        } else {
+            for (Student friend : friends) {
+                System.out.println("- " + friend.getName() + " (" + friend.getEmail() + ")");
+            }
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void sendFriendRequest() {
+        System.out.print("Enter the email of the user you want to add: ");
+        String targetEmail = scanner.nextLine().trim();
+
+        // Don't allow sending request to self
+        if (targetEmail.equals(currentUser.getEmail())) {
+            System.out.println("You cannot send a friend request to yourself.");
+            return;
+        }
+
+        // Find target user
+        Student targetUser = studentHandler.getStudentByUsername(targetEmail);
+        if (targetUser == null) {
+            System.out.println("User not found.");
+            return;
+        }
+
+        // Check if already friends
+        List<Student> friends = dbHandler.getFriends(currentUser.getID());
+        if (friends.stream().anyMatch(f -> f.getID() == targetUser.getID())) {
+            System.out.println("You are already friends with this user.");
+            return;
+        }
+
+        // Check if request already pending
+        if (dbHandler.hasPendingFriendRequest(currentUser.getID(), targetUser.getID())) {
+            System.out.println("A friend request is already pending with this user.");
+            return;
+        }
+
+        // Send the request
+        if (dbHandler.sendFriendRequest(currentUser.getID(), targetUser.getID())) {
+            System.out.println("Friend request sent successfully!");
+        } else {
+            System.out.println("Failed to send friend request. Please try again.");
+        }
+    }
+
+    private void viewPendingRequests() {
+        List<Student> incomingRequests = dbHandler.getIncomingFriendRequests(currentUser.getID());
+        
+        while (true) {
+            System.out.println("\nPending Friend Requests");
+            System.out.println("------------------------");
+            
+            if (incomingRequests.isEmpty()) {
+                System.out.println("No pending friend requests.");
+                System.out.println("\nPress Enter to continue...");
+                scanner.nextLine();
+                return;
+            }
+
+            // Display requests with numbers
+            for (int i = 0; i < incomingRequests.size(); i++) {
+                Student requester = incomingRequests.get(i);
+                System.out.println((i + 1) + ". " + requester.getName() + " (" + requester.getEmail() + ")");
+            }
+
+            System.out.println("\nOptions:");
+            System.out.println("1. Accept a request");
+            System.out.println("2. Decline a request");
+            System.out.println("3. Back");
+
+            int choice = getIntInput(1, 3);
+            if (choice == 3) return;
+
+            System.out.println("Enter the number of the request (1-" + incomingRequests.size() + "): ");
+            int requestIndex = getIntInput(1, incomingRequests.size()) - 1;
+            Student requester = incomingRequests.get(requestIndex);
+
+            if (choice == 1) {
+                if (dbHandler.acceptFriendRequest(requester.getID(), currentUser.getID())) {
+                    System.out.println("Friend request accepted!");
+                    incomingRequests.remove(requestIndex);
+                } else {
+                    System.out.println("Failed to accept friend request. Please try again.");
+                }
+            } else {
+                if (dbHandler.declineFriendRequest(requester.getID(), currentUser.getID())) {
+                    System.out.println("Friend request declined.");
+                    incomingRequests.remove(requestIndex);
+                } else {
+                    System.out.println("Failed to decline friend request. Please try again.");
+                }
+            }
+        }
+    }
+
+    private void blockUser() {
+        System.out.print("Enter the email of the user you want to block: ");
+        String targetEmail = scanner.nextLine().trim();
+
+        // Don't allow blocking self
+        if (targetEmail.equals(currentUser.getEmail())) {
+            System.out.println("You cannot block yourself.");
+            return;
+        }
+
+        // Find target user
+        Student targetUser = studentHandler.getStudentByUsername(targetEmail);
+        if (targetUser == null) {
+            System.out.println("User not found.");
+            return;
+        }
+
+        // Check if already blocked
+        if (dbHandler.isUserBlocked(currentUser.getID(), targetUser.getID())) {
+            System.out.println("You have already blocked this user.");
+            return;
+        }
+
+        // Block the user
+        if (dbHandler.blockUser(currentUser.getID(), targetUser.getID())) {
+            System.out.println("User blocked successfully!");
+            // Remove from friends if they were friends
+            dbHandler.removeFriend(currentUser.getID(), targetUser.getID());
+        } else {
+            System.out.println("Failed to block user. Please try again.");
+        }
+    }
+
+    private void removeFriend() {
+        System.out.print("Enter the email of the friend you want to remove: ");
+        String targetEmail = scanner.nextLine().trim();
+
+        // Find target user
+        Student targetUser = studentHandler.getStudentByUsername(targetEmail);
+        if (targetUser == null) {
+            System.out.println("User not found.");
+            return;
+        }
+
+        // Check if they are friends
+        List<Student> friends = dbHandler.getFriends(currentUser.getID());
+        if (friends.stream().noneMatch(f -> f.getID() == targetUser.getID())) {
+            System.out.println("This user is not in your friends list.");
+            return;
+        }
+
+        // Confirm removal
+        System.out.println("Are you sure you want to remove " + targetUser.getName() + " from your friends list? (y/n)");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+        
+        if (confirm.equals("y")) {
+            if (dbHandler.removeFriend(currentUser.getID(), targetUser.getID())) {
+                System.out.println("Friend removed successfully!");
+            } else {
+                System.out.println("Failed to remove friend. Please try again.");
+            }
+        } else {
+            System.out.println("Friend removal cancelled.");
+        }
     }
 }
