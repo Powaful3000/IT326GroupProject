@@ -257,20 +257,21 @@ public class TerminalUI {
     private void showGroupsMenu() {
         System.out.println("\nClass Groups");
         System.out.println("------------------------");
-        // Display user's groups using your existing GroupHandler
-        System.out.println("\n1. View My Groups");
-        System.out.println("2. Join Group");
-        System.out.println("3. Create Group");
-        System.out.println("4. Leave Group");
-        System.out.println("5. Back");
+        System.out.println("1. View My Groups");
+        System.out.println("2. View All Groups");
+        System.out.println("3. Join Group");
+        System.out.println("4. Create Group");
+        System.out.println("5. Leave Group");
+        System.out.println("6. Back");
 
-        int choice = getIntInput(1, 5);
+        int choice = getIntInput(1, 6);
         switch (choice) {
             case 1 -> viewGroups();
-            case 2 -> joinGroup();
-            case 3 -> createGroup();
-            case 4 -> leaveGroup();
-            case 5 -> {} // Return to main menu
+            case 2 -> viewAllGroups();
+            case 3 -> joinGroup();
+            case 4 -> createGroup();
+            case 5 -> leaveGroup();
+            case 6 -> {} // Return to main menu
         }
     }
 
@@ -377,6 +378,30 @@ public class TerminalUI {
         } else {
             System.out.println("Student is not in this group");
         }
+    }
+    
+    private void viewAllGroups() {
+        System.out.println("\nAll Available Groups:");
+        System.out.println("------------------------");
+        
+        try {
+            List<Group> allGroups = groupHandler.getAllGroups();
+            if (allGroups.isEmpty()) {
+                System.out.println("No groups exist yet.");
+            } else {
+                for (Group group : allGroups) {
+                    System.out.println("\nGroup: " + group.getName());
+                    System.out.println("Description: " + group.getDescription());
+                    System.out.println("Members: " + group.getActiveMembers().size());
+                    System.out.println("------------------------");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error retrieving groups: " + e.getMessage());
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
     
     // Helper method for getting validated integer input
