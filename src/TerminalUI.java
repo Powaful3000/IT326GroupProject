@@ -503,7 +503,14 @@ public class TerminalUI {
 
     private void getFriends() {
         System.out.println("Current friends: ");
-        dbHandler.getFriends();
+        List<Student> friends = dbHandler.getFriends(currentUser.getID());
+        if (friends.isEmpty()) {
+            System.out.println("No friends yet.");
+        } else {
+            for (Student friend : friends) {
+                System.out.println("- " + friend.getName());
+            }
+        }
     }
 
     private void editProfile() {
