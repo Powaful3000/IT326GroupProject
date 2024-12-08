@@ -169,36 +169,36 @@ public class StudentHandler {
             // Get database instance
             Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
             DatabaseHandler dbHandler = new DatabaseHandler(database);
-            
+
             // Look up student in database
             Student student = dbHandler.getStudentByUsername(username);
-            
+
             // Update local cache if found
             if (student != null && !students.contains(student)) {
                 students.add(student);
             }
-            
+
             return student;
         } catch (Exception e) {
             System.err.println("Error looking up student by username: " + e.getMessage());
             return null;
         }
     }
-    
+
     public Student authenticateStudent(String email, String password) {
         try {
             // Get database instance through DatabaseHandler
             Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
             DatabaseHandler dbHandler = new DatabaseHandler(database);
-            
+
             // Attempt authentication through database
             Student authenticatedStudent = dbHandler.authenticateStudent(email, password);
-            
+
             if (authenticatedStudent != null) {
                 // Update local cache if authentication successful
                 setCurrentStudent(authenticatedStudent);
             }
-            
+
             return authenticatedStudent;
         } catch (Exception e) {
             System.err.println("Authentication error: " + e.getMessage());

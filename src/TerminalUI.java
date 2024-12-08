@@ -122,11 +122,10 @@ public class TerminalUI {
 
     public TerminalUI() {
         Database database = DatabaseFactory.getDatabase(
-            DatabaseFactory.DatabaseType.MYSQL,
-            "StudentDB"
-        );
+                DatabaseFactory.DatabaseType.MYSQL,
+                "StudentDB");
         this.dbHandler = new DatabaseHandler(database);
-        
+
         // Establish database connection immediately
         try {
             database.connect();
@@ -134,9 +133,9 @@ public class TerminalUI {
         } catch (RuntimeException e) {
             System.err.println("Failed to connect to database: " + e.getMessage());
             System.err.println("Please check your database configuration and try again.");
-            System.exit(1);  // Exit if we can't connect to the database
+            System.exit(1); // Exit if we can't connect to the database
         }
-        
+
         this.scanner = new Scanner(System.in);
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
@@ -188,9 +187,8 @@ public class TerminalUI {
         try {
             // Use your existing StudentHandler/Controller for authentication
             Student student = studentHandler.authenticateStudent(
-                email,
-                password
-            );
+                    email,
+                    password);
             if (student != null) {
                 currentUser = student;
                 System.out.println("Login successful!");
@@ -210,40 +208,35 @@ public class TerminalUI {
         System.out.print("Enter your name (first and last): ");
         String name = scanner.nextLine();
         System.out.print(
-            "Enter your year (Freshman/Sophomore/Junior/Senior): "
-        );
+                "Enter your year (Freshman/Sophomore/Junior/Senior): ");
         String year = scanner.nextLine();
 
         try {
             // Check if email already exists
             Student existingStudent = studentHandler.getStudentByUsername(
-                email
-            );
+                    email);
             if (existingStudent != null) {
                 System.out.println(
-                    "An account with this email already exists."
-                );
+                        "An account with this email already exists.");
                 return;
             }
 
             // Create new student (using 0 as temporary ID, database will assign real ID)
             Student newStudent = new Student(
-                0,
-                email,
-                name,
-                year,
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>()
-            );
+                    0,
+                    email,
+                    name,
+                    year,
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    new ArrayList<>());
 
             // Add student to database with password
             boolean success = dbHandler.addStudent(newStudent, password);
 
             if (success) {
                 System.out.println(
-                    "Registration successful! Please login with your credentials."
-                );
+                        "Registration successful! Please login with your credentials.");
             } else {
                 System.out.println("Registration failed. Please try again.");
             }
@@ -267,7 +260,7 @@ public class TerminalUI {
             case 1 -> showProfileMenu();
             case 2 -> showGroupsMenu();
             case 3 -> showFriendsMenu();
-            //case 4 -> showMessagesMenu();
+            // case 4 -> showMessagesMenu();
             case 5 -> logout();
         }
     }
@@ -291,8 +284,9 @@ public class TerminalUI {
             case 3 -> editProfile();
             case 4 -> addTag();
             case 5 -> removeTag();
-            //case 5 -> toggleAnonymousMode();
-            case 7 -> {} // Return to main menu
+            // case 5 -> toggleAnonymousMode();
+            case 7 -> {
+            } // Return to main menu
         }
     }
 
@@ -334,8 +328,7 @@ public class TerminalUI {
 
         if (!selectedGroup.isMember(currentUser)) {
             System.out.println(
-                "You must be a member of the group to access it."
-            );
+                    "You must be a member of the group to access it.");
             return;
         }
 
@@ -354,8 +347,7 @@ public class TerminalUI {
             } else {
                 for (Group group : userGroups) {
                     System.out.println(
-                        "- " + group.getName() + ": " + group.getDescription()
-                    );
+                            "- " + group.getName() + ": " + group.getDescription());
                 }
             }
         } catch (Exception e) {
@@ -384,8 +376,7 @@ public class TerminalUI {
                 // Update the database
                 groupHandler.addMemberToGroup(groupToJoin.getID(), currentUser);
                 System.out.println(
-                    "Successfully joined group: " + groupToJoin.getName()
-                );
+                        "Successfully joined group: " + groupToJoin.getName());
             }
         } catch (Exception e) {
             System.out.println("Error joining group: " + e.getMessage());
@@ -422,16 +413,14 @@ public class TerminalUI {
             if (success) {
                 // Add creator as first member
                 success = groupHandler.addMemberToGroup(
-                    newGroup.getID(),
-                    currentUser
-                );
+                        newGroup.getID(),
+                        currentUser);
                 if (success) {
                     System.out.println("Group created successfully: " + name);
                     currentUser.joinGroup(newGroup);
                 } else {
                     System.out.println(
-                        "Group created but failed to add you as a member."
-                    );
+                            "Group created but failed to add you as a member.");
                 }
             } else {
                 System.out.println("Failed to create group. Please try again.");
@@ -455,8 +444,7 @@ public class TerminalUI {
             if (dbHandler.leaveGroup(groupToLeave, currentUser)) {
                 currentUser.leaveGroup(groupToLeave);
                 System.out.println(
-                    "Successfully left group: " + groupToLeave.getName()
-                );
+                        "Successfully left group: " + groupToLeave.getName());
             } else {
                 System.out.println("Failed to leave group. Please try again.");
             }
@@ -477,11 +465,9 @@ public class TerminalUI {
                 for (Group group : allGroups) {
                     System.out.println("\nGroup: " + group.getName());
                     System.out.println(
-                        "Description: " + group.getDescription()
-                    );
+                            "Description: " + group.getDescription());
                     System.out.println(
-                        "Members: " + group.getActiveMembers().size()
-                    );
+                            "Members: " + group.getActiveMembers().size());
                     System.out.println("------------------------");
                 }
             }
@@ -503,8 +489,7 @@ public class TerminalUI {
                     return choice;
                 }
                 System.out.println(
-                    "Please enter a number between " + min + " and " + max
-                );
+                        "Please enter a number between " + min + " and " + max);
             } catch (NumberFormatException e) {
                 System.out.println("Please enter a valid number");
             }
@@ -544,7 +529,8 @@ public class TerminalUI {
             case 1 -> changeEmail();
             case 2 -> changeName();
             case 3 -> changeYear();
-            case 5 -> {} // Return to main menu
+            case 5 -> {
+            } // Return to main menu
         }
     }
 
@@ -644,8 +630,7 @@ public class TerminalUI {
         } else {
             for (Post post : posts) {
                 System.out.println(
-                    "\nPost by " + post.getOwner().getName() + ":"
-                );
+                        "\nPost by " + post.getOwner().getName() + ":");
                 System.out.println(post.getContent());
             }
         }
@@ -661,15 +646,11 @@ public class TerminalUI {
         }
 
         // Verify group membership
-        if (
-            !dbHandler.isStudentInGroup(
+        if (!dbHandler.isStudentInGroup(
                 currentUser.getID(),
-                currentGroup.getID()
-            )
-        ) {
+                currentGroup.getID())) {
             System.out.println(
-                "You must be a member of the group to create posts."
-            );
+                    "You must be a member of the group to create posts.");
             return;
         }
 
@@ -715,14 +696,13 @@ public class TerminalUI {
 
             List<Post> allPosts = dbHandler.getGroupPosts(currentGroup.getID());
             List<Post> myPosts = allPosts
-                .stream()
-                .filter(post -> post.getOwner().getID() == currentUser.getID())
-                .collect(Collectors.toList());
+                    .stream()
+                    .filter(post -> post.getOwner().getID() == currentUser.getID())
+                    .collect(Collectors.toList());
 
             if (myPosts.isEmpty()) {
                 System.out.println(
-                    "You haven't made any posts in this group yet."
-                );
+                        "You haven't made any posts in this group yet.");
                 System.out.println("\nPress Enter to go back...");
                 scanner.nextLine();
                 return;
@@ -746,12 +726,11 @@ public class TerminalUI {
             }
 
             System.out.println(
-                "Enter the number of the post to " +
-                (choice == 1 ? "edit" : "delete") +
-                " (1-" +
-                myPosts.size() +
-                "):"
-            );
+                    "Enter the number of the post to " +
+                            (choice == 1 ? "edit" : "delete") +
+                            " (1-" +
+                            myPosts.size() +
+                            "):");
             int postIndex = getIntInput(1, myPosts.size()) - 1;
             Post selectedPost = myPosts.get(postIndex);
 
@@ -767,8 +746,7 @@ public class TerminalUI {
         System.out.println("\nCurrent content:");
         System.out.println(post.getContent());
         System.out.println(
-            "\nEnter new content (or press Enter without typing to cancel):"
-        );
+                "\nEnter new content (or press Enter without typing to cancel):");
         String newContent = scanner.nextLine();
 
         if (newContent.trim().isEmpty()) {
@@ -807,8 +785,7 @@ public class TerminalUI {
 
     private void viewBookmarkedPosts() {
         List<Post> bookmarked = dbHandler.getBookmarkedPosts(
-            currentUser.getID()
-        );
+                currentUser.getID());
         if (bookmarked.isEmpty()) {
             System.out.println("No bookmarked posts.");
             return;
@@ -826,8 +803,8 @@ public class TerminalUI {
     private void displayPost(Post post) {
         System.out.println("\n------------------------");
         String authorName = post.getOwner().isAnonymous()
-            ? "Anonymous"
-            : post.getOwner().getName();
+                ? "Anonymous"
+                : post.getOwner().getName();
         System.out.println("Author: " + authorName);
         System.out.println("Group: " + post.getGroup().getName());
         System.out.println("Content: " + post.getContent());
@@ -866,7 +843,7 @@ public class TerminalUI {
     private void sendFriendRequest() {
         System.out.print("Enter the username of the user you want to add: ");
         String username = scanner.nextLine();
-        
+
         // Find the user by username
         Student targetUser = studentHandler.getStudentByUsername(username);
         if (targetUser == null) {
@@ -918,7 +895,8 @@ public class TerminalUI {
         System.out.println("3. Back");
 
         int choice = getIntInput(1, 3);
-        if (choice == 3) return;
+        if (choice == 3)
+            return;
 
         System.out.println("Enter the number of the request (1-" + requests.size() + "): ");
         int requestNum = getIntInput(1, requests.size());
@@ -942,7 +920,7 @@ public class TerminalUI {
     private void blockUser() {
         System.out.print("Enter the username of the user to block: ");
         String username = scanner.nextLine();
-        
+
         Student targetUser = studentHandler.getStudentByUsername(username);
         if (targetUser == null) {
             System.out.println("User not found.");
@@ -959,7 +937,7 @@ public class TerminalUI {
     private void removeFriend() {
         System.out.print("Enter the username of the friend to remove: ");
         String username = scanner.nextLine();
-        
+
         Student targetUser = studentHandler.getStudentByUsername(username);
         if (targetUser == null) {
             System.out.println("User not found.");

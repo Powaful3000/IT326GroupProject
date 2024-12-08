@@ -73,6 +73,7 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
         System.out.println("- Description: " + group.getDescription());
         return sqlHandler.addGroup(group);
     }
+
     @Override
     public boolean addMemberToGroup(int groupId, int studentId) {
         return sqlHandler.addMemberToGroup(groupId, studentId);

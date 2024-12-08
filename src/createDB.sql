@@ -16,17 +16,26 @@ USE StudentDB;
 -- Drop order is important due to foreign key relationships
 -- First drop all junction/relationship tables
 DROP TABLE IF EXISTS bookmarked_posts;
+
 DROP TABLE IF EXISTS blocked_users;
+
 DROP TABLE IF EXISTS friends;
+
 DROP TABLE IF EXISTS friend_requests;
+
 DROP TABLE IF EXISTS post_groups;
+
 DROP TABLE IF EXISTS student_tags;
+
 DROP TABLE IF EXISTS group_memberships;
 
 -- Then drop independent tables (those without foreign keys)
 DROP TABLE IF EXISTS tags;
+
 DROP TABLE IF EXISTS posts;
+
 DROP TABLE IF EXISTS student_groups;
+
 DROP TABLE IF EXISTS students;
 
 -- =============================================
@@ -117,7 +126,7 @@ CREATE TABLE
         requestDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- When request was sent
         status ENUM ('PENDING', 'ACCEPTED', 'DECLINED') DEFAULT 'PENDING', -- Request status
         FOREIGN KEY (fromUserID) REFERENCES students (userID) ON DELETE CASCADE, -- Remove requests when sender is deleted
-        FOREIGN KEY (toUserID) REFERENCES students (userID) ON DELETE CASCADE    -- Remove requests when receiver is deleted
+        FOREIGN KEY (toUserID) REFERENCES students (userID) ON DELETE CASCADE -- Remove requests when receiver is deleted
     );
 
 -- Table for tracking confirmed friendships
