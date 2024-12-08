@@ -982,15 +982,17 @@ public class TerminalUI {
             System.out.println("2. View All Database Groups");
             System.out.println("3. View Database Connection Status");
             System.out.println("4. Test Database Queries");
-            System.out.println("5. Return to Main Menu");
+            System.out.println("5. Reset/Create Database");
+            System.out.println("6. Return to Main Menu");
 
-            int choice = getIntInput(1, 5);
+            int choice = getIntInput(1, 6);
             switch (choice) {
                 case 1 -> debugViewAllStudents();
                 case 2 -> debugViewAllGroups();
                 case 3 -> debugCheckConnection();
                 case 4 -> debugTestQueries();
-                case 5 -> inDebugMenu = false;
+                case 5 -> debugResetDatabase();
+                case 6 -> inDebugMenu = false;
             }
         }
     }
@@ -1044,6 +1046,18 @@ public class TerminalUI {
         System.out.println("------------------------");
         // Add basic query tests here if needed
         System.out.println("Query testing complete.");
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void debugResetDatabase() {
+        System.out.println("\nResetting/Creating Database...");
+        System.out.println("------------------------");
+        if (dbHandler.resetDatabase()) {
+            System.out.println("Database reset successful!");
+        } else {
+            System.out.println("Failed to reset database. Check console for errors.");
+        }
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
     }

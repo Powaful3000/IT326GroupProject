@@ -1156,30 +1156,26 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         try {
             System.out.println("Resetting database...");
             
-            // Read and execute the SQL script
+            // Read the entire SQL script into a single string
+            StringBuilder fullScript = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new FileReader("src/createDB.sql"))) {
                 String line;
-                StringBuilder statement = new StringBuilder();
-                
                 while ((line = reader.readLine()) != null) {
                     // Skip comments and empty lines
-                    line = line.trim();
-                    if (line.isEmpty() || line.startsWith("--")) {
+                    if (line.trim().isEmpty() || line.trim().startsWith("--")) {
                         continue;
                     }
-                    
-                    statement.append(line).append(" ");
-                    
-                    // If the line ends with a semicolon, execute the statement
-                    if (line.endsWith(";")) {
-                        String sql = statement.toString().trim();
-                        try {
-                            executeUpdate(sql);
-                        } catch (Exception e) {
-                            System.err.println("Error executing statement: " + e.getMessage());
-                            // Continue with other statements even if one fails
-                        }
-                        statement.setLength(0); // Clear the statement buffer
+                    fullScript.append(line).append("\n");
+                }
+            }
+
+            // Split into individual statements and execute each one
+            String[] statements = fullScript.toString().split(";");
+            for (String statement : statements) {
+                statement = statement.trim();
+                if (!statement.isEmpty()) {
+                    if (!executeUpdate(statement + ";")) {
+                        System.err.println("Failed statement: " + statement);
                     }
                 }
             }
