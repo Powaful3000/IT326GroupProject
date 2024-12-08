@@ -26,8 +26,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     // SQL Query Constants
     private static final String SQL_SELECT_STUDENT_BY_ID = "SELECT * FROM " + TABLE_STUDENTS + " WHERE userID = ?";
-    private static final String SQL_SELECT_STUDENT_BY_USERNAME = "SELECT * FROM " + TABLE_STUDENTS
-            + " WHERE userName = ?";
+    private static final String SQL_SELECT_STUDENT_BY_USERNAME = "SELECT * FROM " + TABLE_STUDENTS + " WHERE userName = ?";
     private static final String SQL_INSERT_STUDENT = "INSERT INTO students (userName, password, userYear) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_STUDENT = "DELETE FROM " + TABLE_STUDENTS + " WHERE userID = ?";
     private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS + " (postID, postContent, postOwner) VALUES (?, ?, ?)";
@@ -92,9 +91,9 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_GET_STUDENT_BY_ID = "SELECT * FROM students WHERE userID = ?";
 
     // Add these with the other SQL constants at the top of the class
-    private static final String SQL_REMOVE_FRIEND = "DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)";
+    private static final String SQL_REMOVE_FRIEND = "DELETE FROM friends WHERE (userID1 = ? AND userID2 = ?) OR (userID1 = ? AND userID2 = ?)";
 
-    private static final String SQL_UNBLOCK_USER = "DELETE FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+    private static final String SQL_UNBLOCK_USER = "DELETE FROM blocked_users WHERE blockerID = ? AND blockedID = ?";
 
     private static final String SQL_REMOVE_GROUP_MEMBER = "DELETE FROM group_memberships WHERE groupID = ? AND studentID = ?";
 
@@ -134,11 +133,15 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         TABLE_MEMBERSHIPS + " m ON g.groupID = m.groupID WHERE m.studentID = ? AND (m.endDate IS NULL OR m.endDate > CURRENT_TIMESTAMP)";
 
     // Add these SQL constants with the others at the top
-    private static final String SQL_CHECK_PENDING_REQUEST = "SELECT * FROM friend_requests WHERE from_user_id = ? AND to_user_id = ? AND status = 'PENDING'";
-    private static final String SQL_GET_INCOMING_REQUESTS = "SELECT s.* FROM students s JOIN friend_requests fr ON s.userID = fr.from_user_id WHERE fr.to_user_id = ? AND fr.status = 'PENDING'";
-    private static final String SQL_ACCEPT_REQUEST = "UPDATE friend_requests SET status = 'ACCEPTED' WHERE from_user_id = ? AND to_user_id = ? AND status = 'PENDING'";
-    private static final String SQL_DECLINE_REQUEST = "UPDATE friend_requests SET status = 'DECLINED' WHERE from_user_id = ? AND to_user_id = ? AND status = 'PENDING'";
-    private static final String SQL_CHECK_BLOCKED = "SELECT * FROM blocked_users WHERE blocker_id = ? AND blocked_id = ?";
+    private static final String SQL_CHECK_PENDING_REQUEST = "SELECT * FROM friend_requests WHERE fromUserID = ? AND toUserID = ? AND status = 'PENDING'";
+    private static final String SQL_GET_INCOMING_REQUESTS = "SELECT s.* FROM students s JOIN friend_requests fr ON s.userID = fr.fromUserID WHERE fr.toUserID = ? AND fr.status = 'PENDING'";
+    private static final String SQL_ACCEPT_REQUEST = "UPDATE friend_requests SET status = 'ACCEPTED' WHERE fromUserID = ? AND toUserID = ? AND status = 'PENDING'";
+    private static final String SQL_DECLINE_REQUEST = "UPDATE friend_requests SET status = 'DECLINED' WHERE fromUserID = ? AND toUserID = ? AND status = 'PENDING'";
+    private static final String SQL_CHECK_BLOCKED = "SELECT * FROM blocked_users WHERE blockerID = ? AND blockedID = ?";
+
+    private static final String SQL_GET_STUDENT_BY_EMAIL = "SELECT * FROM " + TABLE_STUDENTS + " WHERE email = ?";
+
+    private static final String SQL_ADD_FRIENDSHIP = "INSERT INTO friends (userID1, userID2) VALUES (?, ?)";
 
     // Constructor
     public MySQLHandler(String dbName) {
@@ -485,17 +488,34 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     // Query example (single result)
     @Override
     public Student getStudentByUsername(String username) {
+        System.out.println("\n====== MySQL Get Student Debug ======");
+        System.out.println("Looking up student with username: " + username);
+        System.out.println("Using query: " + SQL_SELECT_STUDENT_BY_USERNAME);
+        
         return executeQuery(
-                SQL_SELECT_STUDENT_BY_USERNAME,
-                stmt -> stmt.setString(1, username),
-                rs -> rs.next() ? new Student(
+            SQL_SELECT_STUDENT_BY_USERNAME,
+            stmt -> {
+                stmt.setString(1, username);
+                System.out.println("Parameters set, executing query...");
+            },
+            rs -> {
+                if (rs.next()) {
+                    System.out.println("Found student:");
+                    System.out.println("- userID: " + rs.getInt("userID"));
+                    System.out.println("- userName: " + rs.getString("userName"));
+                    System.out.println("- userYear: " + rs.getString("userYear"));
+                    return new Student(
                         rs.getInt("userID"),
-                        null,
+                        rs.getString("userName"),
                         rs.getString("userName"),
                         rs.getString("userYear"),
                         new ArrayList<>(),
                         new ArrayList<>(),
-                        new ArrayList<>()) : null);
+                        new ArrayList<>());
+                }
+                System.out.println("No student found with username: " + username);
+                return null;
+            });
     }
 
     @Override
@@ -1061,12 +1081,27 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     @Override
     public boolean acceptFriendRequest(int requesterId, int accepterId) {
-        return executeUpdate(
+        // First update the request status
+        boolean requestUpdated = executeUpdate(
             SQL_ACCEPT_REQUEST,
             stmt -> {
-            stmt.setInt(1, requesterId);
-            stmt.setInt(2, accepterId);
+                stmt.setInt(1, requesterId);
+                stmt.setInt(2, accepterId);
+            }
+        );
+
+        if (!requestUpdated) {
+            return false;
         }
+
+        // Then add the friendship
+        return executeUpdate(
+            SQL_ADD_FRIENDSHIP,
+            stmt -> {
+                stmt.setInt(1, requesterId);
+                stmt.setInt(2, accepterId);
+                System.out.println("Adding friendship between users " + requesterId + " and " + accepterId);
+            }
         );
     }
 
@@ -1099,6 +1134,27 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             SQL_GET_INCOMING_REQUESTS,
             stmt -> stmt.setInt(1, studentId),
             this::mapResultSetToStudentList
+        );
+    }
+
+    public Student findStudentByEmail(String email) {
+        return executeQuery(
+            SQL_GET_STUDENT_BY_EMAIL,
+            stmt -> stmt.setString(1, email),
+            rs -> {
+                if (rs.next()) {
+                    return new Student(
+                        rs.getInt("userID"),
+                        rs.getString("email"),
+                        rs.getString("userName"),
+                        rs.getString("userYear"),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                    );
+                }
+                return null;
+            }
         );
     }
 
