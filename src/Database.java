@@ -79,4 +79,6 @@ public abstract class Database {
     public abstract Group findGroupByName(String groupName);
 
     public abstract Group getGroupByID(int groupId);
+
+    public abstract boolean deletePost(int postId);
 }

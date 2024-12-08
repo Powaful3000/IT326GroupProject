@@ -219,4 +219,9 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     public Group getGroupByID(int groupId) {
         return sqlHandler.getGroupByID(groupId);
     }
+
+    @Override
+    public boolean deletePost(int postId) {
+        return sqlHandler.deletePost(postId);
+    }
 }

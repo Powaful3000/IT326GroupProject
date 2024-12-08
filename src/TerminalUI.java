@@ -628,25 +628,89 @@ public class TerminalUI {
             return;
         }
 
-        System.out.println("\nYour Posts in " + currentGroup.getName());
-        System.out.println("------------------------");
-        
-        List<Post> allPosts = dbHandler.getGroupPosts(currentGroup.getID());
-        List<Post> myPosts = allPosts.stream()
-            .filter(post -> post.getOwner().getID() == currentUser.getID())
-            .collect(Collectors.toList());
-        
-        if (myPosts.isEmpty()) {
-            System.out.println("You haven't made any posts in this group yet.");
-        } else {
-            for (Post post : myPosts) {
-                System.out.println("\nPost:");
-                System.out.println(post.getContent());
+        while (true) {
+            System.out.println("\nYour Posts in " + currentGroup.getName());
+            System.out.println("------------------------");
+            
+            List<Post> allPosts = dbHandler.getGroupPosts(currentGroup.getID());
+            List<Post> myPosts = allPosts.stream()
+                .filter(post -> post.getOwner().getID() == currentUser.getID())
+                .collect(Collectors.toList());
+            
+            if (myPosts.isEmpty()) {
+                System.out.println("You haven't made any posts in this group yet.");
+                System.out.println("\nPress Enter to go back...");
+                scanner.nextLine();
+                return;
+            }
+
+            // Display posts with numbers
+            for (int i = 0; i < myPosts.size(); i++) {
+                System.out.println("\n[" + (i + 1) + "] Post:");
+                System.out.println(myPosts.get(i).getContent());
+            }
+            
+            System.out.println("\nOptions:");
+            System.out.println("1. Edit a post");
+            System.out.println("2. Delete a post");
+            System.out.println("3. Back");
+            
+            int choice = getIntInput(1, 3);
+            
+            if (choice == 3) {
+                return;
+            }
+            
+            System.out.println("Enter the number of the post to " + (choice == 1 ? "edit" : "delete") + " (1-" + myPosts.size() + "):");
+            int postIndex = getIntInput(1, myPosts.size()) - 1;
+            Post selectedPost = myPosts.get(postIndex);
+            
+            if (choice == 1) {
+                editPost(selectedPost);
+            } else {
+                deletePost(selectedPost);
             }
         }
+    }
+
+    private void editPost(Post post) {
+        System.out.println("\nCurrent content:");
+        System.out.println(post.getContent());
+        System.out.println("\nEnter new content (or press Enter without typing to cancel):");
+        String newContent = scanner.nextLine();
         
-        System.out.println("\nPress Enter to continue...");
-        scanner.nextLine();
+        if (newContent.trim().isEmpty()) {
+            System.out.println("Edit cancelled.");
+            return;
+        }
+
+        // First update in database
+        if (dbHandler.editPost(post)) {
+            // Then update in memory
+            post.setContent(newContent);
+            postHandler.updatePostContent(post.getID(), newContent);
+            System.out.println("Post updated successfully!");
+        } else {
+            System.out.println("Failed to update post in database.");
+        }
+    }
+
+    private void deletePost(Post post) {
+        System.out.println("Are you sure you want to delete this post? (y/n)");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+        
+        if (confirm.equals("y")) {
+            // First delete from database
+            if (dbHandler.deletePost(post.getID())) {
+                // Then remove from memory
+                postHandler.removePost(post.getID());
+                System.out.println("Post deleted successfully!");
+            } else {
+                System.out.println("Failed to delete post from database.");
+            }
+        } else {
+            System.out.println("Delete cancelled.");
+        }
     }
 
     private void viewBookmarkedPosts() {
@@ -672,36 +736,6 @@ public class TerminalUI {
         System.out.println("Group: " + post.getGroup().getName());
         System.out.println("Content: " + post.getContent());
         System.out.println("------------------------");
-    }
-
-    private void editPost(Post post) {
-        System.out.println("Enter new content:");
-        String newContent = scanner.nextLine();
-        
-        if (newContent.trim().isEmpty()) {
-            System.out.println("Post content cannot be empty.");
-            return;
-        }
-
-        post.setContent(newContent);
-        if (postHandler.updatePostContent(post.getID(), newContent) && dbHandler.editPost(post)) {
-            System.out.println("Post updated successfully!");
-        } else {
-            System.out.println("Failed to update post.");
-        }
-    }
-
-    private void deletePost(Post post) {
-        System.out.println("Are you sure you want to delete this post? (y/n)");
-        String confirm = scanner.nextLine().trim().toLowerCase();
-        
-        if (confirm.equals("y")) {
-            if (postHandler.removePost(post.getID())) {
-                System.out.println("Post deleted successfully!");
-            } else {
-                System.out.println("Failed to delete post.");
-            }
-        }
     }
 
     private int generateUniquePostId() {

@@ -1029,4 +1029,15 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 rs -> rs.next() ? rs.getInt(1) + 1 : 1);
     }
 
+    @Override
+    public boolean deletePost(int postId) {
+        return executeUpdate(
+            SQL_DELETE_POST,
+            stmt -> {
+                stmt.setInt(1, postId);
+                System.out.println("Deleting post with ID: " + postId);
+            }
+        );
+    }
+
 }
