@@ -320,12 +320,47 @@ public class TerminalUI {
     }
     
     private void createGroup() {
-    	System.out.println("Enter desired group name: ");
-    	String name = scanner.nextLine();
-    	System.out.println("Enter desired group description: ");
-    	String desc = scanner.nextLine();
-    	Group newGroup = new Group(0, name, desc); // placeholder 0 until logic figured out
-    	groupHandler.addGroup(newGroup);
+        try {
+            // Input validation
+            System.out.println("Enter desired group name: ");
+            String name = scanner.nextLine().trim();
+            if (name.isEmpty()) {
+                System.out.println("Group name cannot be empty.");
+                return;
+            }
+
+            // Check if group already exists
+            if (groupHandler.findGroupByName(name) != null) {
+                System.out.println("A group with this name already exists.");
+                return;
+            }
+
+            System.out.println("Enter desired group description: ");
+            String desc = scanner.nextLine().trim();
+            if (desc.isEmpty()) {
+                System.out.println("Group description cannot be empty.");
+                return;
+            }
+
+            // Create new group (ID will be set by MySQLHandler)
+            Group newGroup = new Group(0, name, desc);
+            boolean success = groupHandler.addGroup(newGroup);
+
+            if (success) {
+                // Add creator as first member
+                success = groupHandler.addMemberToGroup(newGroup.getID(), currentUser);
+                if (success) {
+                    System.out.println("Group created successfully: " + name);
+                    currentUser.joinGroup(newGroup);
+                } else {
+                    System.out.println("Group created but failed to add you as a member.");
+                }
+            } else {
+                System.out.println("Failed to create group. Please try again.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error creating group: " + e.getMessage());
+        }
     }
     
     private void leaveGroup() {
