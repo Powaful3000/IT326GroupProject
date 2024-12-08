@@ -176,6 +176,23 @@ public class StudentHandler {
     }
     
     public Student authenticateStudent(String email, String password) {
-    	return null;
+        try {
+            // Get database instance through DatabaseHandler
+            Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
+            DatabaseHandler dbHandler = new DatabaseHandler(database);
+            
+            // Attempt authentication through database
+            Student authenticatedStudent = dbHandler.authenticateStudent(email, password);
+            
+            if (authenticatedStudent != null) {
+                // Update local cache if authentication successful
+                setCurrentStudent(authenticatedStudent);
+            }
+            
+            return authenticatedStudent;
+        } catch (Exception e) {
+            System.err.println("Authentication error: " + e.getMessage());
+            return null;
+        }
     }
 }

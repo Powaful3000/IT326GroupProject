@@ -1,5 +1,6 @@
 import java.util.Scanner;
 import java.util.List;
+import java.util.ArrayList;
 
 
 /*
@@ -176,15 +177,39 @@ public class TerminalUI {
         }
     }
 
-    private void handleRegistration()
-    {
-    	System.out.print("Desired email: ");
+    private void handleRegistration() {
+        System.out.print("Desired email: ");
         String email = scanner.nextLine();
         System.out.print("Desired password: ");
         String password = scanner.nextLine();
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter your year (Freshman/Sophomore/Junior/Senior): ");
+        String year = scanner.nextLine();
         
-        // check if email and password already exist
-        // if not, create account
+        try {
+            // Check if email already exists
+            Student existingStudent = studentHandler.getStudentByUsername(email);
+            if (existingStudent != null) {
+                System.out.println("An account with this email already exists.");
+                return;
+            }
+            
+            // Create new student (using 0 as temporary ID, database will assign real ID)
+            Student newStudent = new Student(0, email, name, year, 
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+                
+            // Add student to database with password
+            boolean success = dbHandler.addStudent(newStudent, password);
+            
+            if (success) {
+                System.out.println("Registration successful! Please login with your credentials.");
+            } else {
+                System.out.println("Registration failed. Please try again.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error during registration: " + e.getMessage());
+        }
     }
     
     private void showMainMenu() {
