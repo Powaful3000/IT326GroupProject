@@ -503,6 +503,7 @@ public class TerminalUI {
 
     private void getFriends() {
         System.out.println("Current friends: ");
+        dbHandler.getFriends();
     }
 
     private void editProfile() {
