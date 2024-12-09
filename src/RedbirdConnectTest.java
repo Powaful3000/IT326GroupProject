@@ -108,25 +108,28 @@ public class RedbirdConnectTest {
 
     @Test
     public void leaveGroupSuccess() {
-        List<Post> xavierPosts = new ArrayList<>();
-
-        g1 = new Group(1, "IT326", "project class");
-        g2 = new Group(5, "IT348", "machine learning");
-
-        groups = Arrays.asList(g1);
-
+        g2 = groupHandler.findGroupByName("IT348");
+        if (g2 == null) {
+            g2 = new Group(5, "IT348", "machine learning");
+            groupHandler.addGroup(g2);
+        }
+        
         Student jon = new Student(
             3,
             "Jon@ilstu.edu",
             "Jon Jon",
             "Freshman",
             tags,
-            groups,
-            xavierPosts
+            Arrays.asList(g2),
+            new ArrayList<>()
         );
 
-        dbHandler.joinGroup(3, 5);
-        assertTrue(dbHandler.leaveGroup(g2, jon));
+        studentController.registerStudent("Jon Jon", "Freshman", 3);
+        studentController.loginStudent(3);
+        studentHandler.setCurrentStudent(jon);
+        
+        assertTrue(studentController.joinGroup(5));
+        assertTrue(studentController.leaveGroup(5));
     }
 
     @Test
