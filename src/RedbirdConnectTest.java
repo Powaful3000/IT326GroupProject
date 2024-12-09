@@ -111,6 +111,7 @@ public class RedbirdConnectTest {
         List<Post> xavierPosts = new ArrayList<>();
 
         g1 = new Group(1, "IT326", "project class");
+        g2 = new Group(5, "IT348", "machine learning");
 
         groups = Arrays.asList(g1);
 
@@ -124,7 +125,8 @@ public class RedbirdConnectTest {
             xavierPosts
         );
 
-        assertTrue(dbHandler.leaveGroup(g1, jon));
+        dbHandler.joinGroup(3, 5);
+        assertTrue(dbHandler.leaveGroup(g2, jon));
     }
 
     @Test
