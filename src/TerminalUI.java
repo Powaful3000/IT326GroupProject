@@ -99,7 +99,7 @@ import java.util.stream.Collectors;
  * 1. View Friends List
  * 2. Send Friend Request
  * 3. View Pending Requests
- * 4. Block User
+ * 4. Blocked Users
  * 5. Remove Friend
  * 6. Back
  *
@@ -841,7 +841,7 @@ public class TerminalUI {
             System.out.println("1. View Friends List");
             System.out.println("2. Send Friend Request");
             System.out.println("3. View Pending Requests");
-            System.out.println("4. Block User");
+            System.out.println("4. Blocked Users");
             System.out.println("5. Remove Friend");
             System.out.println("6. Back");
 
@@ -850,7 +850,7 @@ public class TerminalUI {
                 case 1 -> getFriends();
                 case 2 -> sendFriendRequest();
                 case 3 -> viewPendingRequests();
-                case 4 -> blockUser();
+                case 4 -> showBlockedUsersMenu();
                 case 5 -> removeFriend();
                 case 6 -> inFriendsMenu = false;
             }
@@ -931,6 +931,58 @@ public class TerminalUI {
             } else {
                 System.out.println("Failed to decline friend request.");
             }
+        }
+    }
+
+    private void showBlockedUsersMenu() {
+        boolean inBlockedMenu = true;
+        while (inBlockedMenu) {
+            System.out.println("\nBlocked Users");
+            System.out.println("------------------------");
+            
+            // Display current blocked users
+            List<Student> blockedUsers = dbHandler.getBlockedUsers(currentUser.getID());
+            if (blockedUsers.isEmpty()) {
+                System.out.println("You haven't blocked any users.");
+            } else {
+                System.out.println("Currently blocked users:");
+                for (Student user : blockedUsers) {
+                    System.out.println("- " + user.getName());
+                }
+            }
+
+            System.out.println("\n1. Block a User");
+            System.out.println("2. Unblock a User");
+            System.out.println("3. Back");
+
+            int choice = getIntInput(1, 3);
+            switch (choice) {
+                case 1 -> blockUser();
+                case 2 -> unblockUser();
+                case 3 -> inBlockedMenu = false;
+            }
+        }
+    }
+
+    private void unblockUser() {
+        System.out.print("Enter the username of the user to unblock: ");
+        String username = scanner.nextLine();
+
+        Student targetUser = studentHandler.getStudentByUsername(username);
+        if (targetUser == null) {
+            System.out.println("User not found.");
+            return;
+        }
+
+        if (!dbHandler.isUserBlocked(currentUser.getID(), targetUser.getID())) {
+            System.out.println("This user is not blocked.");
+            return;
+        }
+
+        if (dbHandler.unblockUser(currentUser.getID(), targetUser.getID())) {
+            System.out.println("User unblocked successfully.");
+        } else {
+            System.out.println("Failed to unblock user.");
         }
     }
 
