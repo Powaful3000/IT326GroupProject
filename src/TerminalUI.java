@@ -285,7 +285,8 @@ public class TerminalUI {
     private void showProfileMenu() {
         System.out.println("\nMy Profile");
         System.out.println("------------------------");
-        System.out.println("Current Tags: " + currentUser.getTags());
+        List<Tag> currentTags = tagHandler.getTagsByStudent(currentUser);
+        System.out.println("Current Tags: " + currentTags);
         System.out.println("\n1. View Profile Details");
         System.out.println("2. View Friends List");
         System.out.println("3. Edit Profile");
@@ -518,8 +519,11 @@ public class TerminalUI {
     private void viewProfileDetails() {
         System.out.println("\nProfile Details");
         System.out.println("------------------------");
+        System.out.println("Name: " + currentUser.getName());
         System.out.println("Email: " + currentUser.getEmail());
-        System.out.println("Tags: " + currentUser.getTags());
+        System.out.println("Year: " + currentUser.getYear());
+        List<Tag> currentTags = tagHandler.getTagsByStudent(currentUser);
+        System.out.println("Tags: " + currentTags);
         // Add more profile details as needed
     }
 
@@ -607,9 +611,15 @@ public class TerminalUI {
             return;
         }
 
+        // Get current student's tags
+        List<Tag> currentTags = tagHandler.getTagsByStudent(currentUser);
+
         System.out.println("\nAvailable Tags:");
         for (Tag tag : allTags) {
-            System.out.println("- " + tag.getName() + (tag.getDescription() != null ? " (" + tag.getDescription() + ")" : ""));
+            boolean hasTag = currentTags.stream().anyMatch(t -> t.getID() == tag.getID());
+            System.out.println("- " + tag.getName() + 
+                (tag.getDescription() != null ? " (" + tag.getDescription() + ")" : "") +
+                (hasTag ? " [Already Added]" : ""));
         }
 
         System.out.print("\nEnter tag name to add: ");
@@ -618,6 +628,12 @@ public class TerminalUI {
         
         if (tagToAdd == null) {
             System.out.println("Tag not found.");
+            return;
+        }
+
+        // Check if student already has this tag
+        if (currentTags.stream().anyMatch(t -> t.getID() == tagToAdd.getID())) {
+            System.out.println("You already have this tag.");
             return;
         }
 

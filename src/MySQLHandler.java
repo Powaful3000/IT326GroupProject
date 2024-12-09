@@ -498,30 +498,38 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     // Query example (single result)
     @Override
     public Student getStudentByUsername(String username) {
-        System.out.println("\n====== MySQL Get Student Debug ======");
-        System.out.println("Looking up student with username: " + username);
-        System.out.println("Using query: " + SQL_SELECT_STUDENT_BY_USERNAME);
-
         return executeQuery(
                 SQL_SELECT_STUDENT_BY_USERNAME,
-                stmt -> {
-                    stmt.setString(1, username);
-                    System.out.println("Parameters set, executing query...");
-                },
+                stmt -> stmt.setString(1, username),
                 rs -> {
                     if (rs.next()) {
-                        System.out.println("Found student:");
-                        System.out.println("- userID: " + rs.getInt("userID"));
-                        System.out.println("- userName: " + rs.getString("userName"));
-                        System.out.println("- userYear: " + rs.getString("userYear"));
-                        return new Student(
+                        // First create the student
+                        Student student = new Student(
                                 rs.getInt("userID"),
-                                rs.getString("userName"),
+                                rs.getString("email"),
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
                                 new ArrayList<>(),
                                 new ArrayList<>(),
                                 new ArrayList<>());
+
+                        // Then load their tags
+                        executeQuery(
+                            SQL_GET_STUDENT_TAGS,
+                            tagStmt -> tagStmt.setInt(1, student.getID()),
+                            tagRs -> {
+                                while (tagRs.next()) {
+                                    Tag tag = new Tag(
+                                        tagRs.getInt("tagID"),
+                                        tagRs.getString("name"),
+                                        tagRs.getString("description")
+                                    );
+                                    student.addTag(tag);
+                                }
+                                return null;
+                            });
+                        
+                        return student;
                     }
                     System.out.println("No student found with username: " + username);
                     return null;
@@ -604,12 +612,29 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     }
 
     public boolean addTagToStudent(int studentId, int tagId) {
+        // First check if the student already has this tag
+        boolean hasTag = executeQuery(
+            "SELECT COUNT(*) FROM " + TABLE_STUDENT_TAGS + " WHERE studentID = ? AND tagID = ?",
+            stmt -> {
+                stmt.setInt(1, studentId);
+                stmt.setInt(2, tagId);
+            },
+            rs -> rs.next() && rs.getInt(1) > 0
+        );
+
+        if (hasTag) {
+            // Tag already exists for this student, consider it a success
+            return true;
+        }
+
+        // If not, add the tag
         return executeUpdate(
-                SQL_ADD_TAG_TO_STUDENT,
-                stmt -> {
-                    stmt.setInt(1, studentId);
-                    stmt.setInt(2, tagId);
-                });
+            SQL_ADD_TAG_TO_STUDENT,
+            stmt -> {
+                stmt.setInt(1, studentId);
+                stmt.setInt(2, tagId);
+            }
+        );
     }
 
     public boolean removeTagFromStudent(int studentId, int tagId) {
@@ -883,14 +908,33 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 stmt -> stmt.setInt(1, userId),
                 rs -> {
                     if (rs.next()) {
-                        return new Student(
+                        // First create the student
+                        Student student = new Student(
                                 rs.getInt("userID"),
-                                null,
+                                rs.getString("email"),
                                 rs.getString("userName"),
                                 rs.getString("userYear"),
                                 new ArrayList<>(),
                                 new ArrayList<>(),
                                 new ArrayList<>());
+
+                        // Then load their tags
+                        executeQuery(
+                            SQL_GET_STUDENT_TAGS,
+                            tagStmt -> tagStmt.setInt(1, student.getID()),
+                            tagRs -> {
+                                while (tagRs.next()) {
+                                    Tag tag = new Tag(
+                                        tagRs.getInt("tagID"),
+                                        tagRs.getString("name"),
+                                        tagRs.getString("description")
+                                    );
+                                    student.addTag(tag);
+                                }
+                                return null;
+                            });
+                        
+                        return student;
                     }
                     return null;
                 });

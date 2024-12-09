@@ -9,6 +9,7 @@ public class StudentHandler {
     private Student currentStudent;
 
     private static StudentHandler instance; // Add singleton pattern
+    private DatabaseHandler dbHandler;
 
     public static StudentHandler getInstance() {
         if (instance == null) {
@@ -20,6 +21,8 @@ public class StudentHandler {
     // Constructor
     private StudentHandler() {
         this.students = new ArrayList<>();
+        Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
+        this.dbHandler = new DatabaseHandler(database);
     }
 
     // Add a student
@@ -90,9 +93,15 @@ public class StudentHandler {
             System.err.println("Student with ID " + studentID + " not found.");
             return false;
         }
-        student.addTag(tag);
-        System.out.println("Tag added to student " + student.getName() + ": " + tag.getName());
-        return true;
+        
+        // First try to add to database
+        if (dbHandler.addTagToStudent(studentID, tag.getID())) {
+            // If successful in database, update memory
+            student.addTag(tag);
+            System.out.println("Tag added to student " + student.getName() + ": " + tag.getName());
+            return true;
+        }
+        return false;
     }
 
     // Remove a tag from a student
@@ -102,9 +111,15 @@ public class StudentHandler {
             System.err.println("Student with ID " + studentID + " not found.");
             return false;
         }
-        student.removeTag(tag);
-        System.out.println("Tag removed from student " + student.getName() + ": " + tag.getName());
-        return true;
+        
+        // First try to remove from database
+        if (dbHandler.removeTagFromStudent(studentID, tag.getID())) {
+            // If successful in database, update memory
+            student.removeTag(tag);
+            System.out.println("Tag removed from student " + student.getName() + ": " + tag.getName());
+            return true;
+        }
+        return false;
     }
 
     // Print all students
