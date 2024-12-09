@@ -289,21 +289,22 @@ public class TerminalUI {
         System.out.println("\n1. View Profile Details");
         System.out.println("2. View Friends List");
         System.out.println("3. Edit Profile");
-        System.out.println("4. Add Tag");
-        System.out.println("5. Remove Tag");
-        System.out.println("6. Enable/Disable Anonymous Mode");
-        System.out.println("7. Back");
+        System.out.println("4. Create New Tag");
+        System.out.println("5. Add Existing Tag");
+        System.out.println("6. Remove Tag");
+        System.out.println("7. Enable/Disable Anonymous Mode");
+        System.out.println("8. Back");
 
-        int choice = getIntInput(1, 6);
+        int choice = getIntInput(1, 8);
         switch (choice) {
             case 1 -> viewProfileDetails();
             case 2 -> getFriends();
             case 3 -> editProfile();
-            case 4 -> addTag();
-            case 5 -> removeTag();
-            // case 5 -> toggleAnonymousMode();
-            case 7 -> {
-            } // Return to main menu
+            case 4 -> createTag();
+            case 5 -> addExistingTag();
+            case 6 -> removeTag();
+            case 7 -> toggleAnonymousMode();
+            case 8 -> {} // Return to main menu
         }
     }
 
@@ -569,15 +570,63 @@ public class TerminalUI {
         currentUser.setYear(year);
     }
 
-    private void addTag() {
+    private void createTag() {
         System.out.print("Enter new tag name: ");
         String name = scanner.nextLine();
-        System.out.print("Enter new tag description: ");
+        System.out.print("Enter tag description: ");
         String desc = scanner.nextLine();
-        Tag tagAdd = new Tag(0, name, desc); // placeholder 0
+        
+        // Create new tag with auto-generated ID
+        Tag newTag = new Tag(name, desc);
+        
         try {
-            studentHandler.addTagToStudent(currentUser.getID(), tagAdd);
-            System.out.println("Tag added successfully!");
+            if (tagHandler.addTag(newTag)) {
+                System.out.println("Tag created successfully!");
+                System.out.print("Would you like to add this tag to your profile? (y/n): ");
+                String answer = scanner.nextLine().trim().toLowerCase();
+                if (answer.equals("y")) {
+                    if (studentHandler.addTagToStudent(currentUser.getID(), newTag)) {
+                        System.out.println("Tag added to your profile!");
+                    } else {
+                        System.out.println("Failed to add tag to your profile.");
+                    }
+                }
+            } else {
+                System.out.println("Failed to create tag.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error creating tag: " + e.getMessage());
+        }
+    }
+
+    private void addExistingTag() {
+        // Show available tags
+        List<Tag> allTags = tagHandler.getAllTags();
+        if (allTags.isEmpty()) {
+            System.out.println("No tags available. Please create a new tag first.");
+            return;
+        }
+
+        System.out.println("\nAvailable Tags:");
+        for (Tag tag : allTags) {
+            System.out.println("- " + tag.getName() + (tag.getDescription() != null ? " (" + tag.getDescription() + ")" : ""));
+        }
+
+        System.out.print("\nEnter tag name to add: ");
+        String tagName = scanner.nextLine();
+        Tag tagToAdd = tagHandler.getTagByName(tagName);
+        
+        if (tagToAdd == null) {
+            System.out.println("Tag not found.");
+            return;
+        }
+
+        try {
+            if (studentHandler.addTagToStudent(currentUser.getID(), tagToAdd)) {
+                System.out.println("Tag added successfully!");
+            } else {
+                System.out.println("Failed to add tag to your profile.");
+            }
         } catch (Exception e) {
             System.out.println("Error adding tag: " + e.getMessage());
         }
@@ -1119,5 +1168,15 @@ public class TerminalUI {
         System.out.println("\nMessages feature coming soon!");
         System.out.println("Press Enter to continue...");
         scanner.nextLine();
+    }
+
+    private void toggleAnonymousMode() {
+        boolean currentMode = currentUser.isAnonymous();
+        if (dbHandler.toggleAnonymousMode(currentUser.getID(), !currentMode)) {
+            currentUser.setAnonymous(!currentMode);
+            System.out.println("Anonymous mode " + (currentUser.isAnonymous() ? "enabled" : "disabled"));
+        } else {
+            System.out.println("Failed to toggle anonymous mode");
+        }
     }
 }

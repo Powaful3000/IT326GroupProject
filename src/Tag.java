@@ -5,9 +5,16 @@ public class Tag {
     private String name;
     private String description;
 
-    // Constructor
+    // Constructor with ID
     public Tag(int id, String name, String description) {
         this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
+    // Constructor without ID (for new tags)
+    public Tag(String name, String description) {
+        this.id = 0; // Will be set after database insertion
         this.name = name;
         this.description = description;
     }

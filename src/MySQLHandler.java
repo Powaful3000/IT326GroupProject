@@ -575,12 +575,32 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     // New methods for tag handling
     public boolean addTag(Tag tag) {
-        return executeUpdate(
-                SQL_INSERT_TAG,
-                stmt -> {
-                    stmt.setString(1, tag.getName());
-                    stmt.setString(2, tag.getDescription());
-                });
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            ensureConnected();
+            stmt = connection.prepareStatement(SQL_INSERT_TAG, PreparedStatement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, tag.getName());
+            stmt.setString(2, tag.getDescription());
+            
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                return false;
+            }
+
+            rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                // Update the tag object with the auto-generated ID
+                tag.setID(rs.getInt(1));
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            logError("Failed to add tag: " + e.getMessage());
+            return false;
+        } finally {
+            closeResources(rs, stmt);
+        }
     }
 
     public boolean addTagToStudent(int studentId, int tagId) {
