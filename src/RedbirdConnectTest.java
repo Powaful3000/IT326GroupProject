@@ -16,6 +16,9 @@ public class RedbirdConnectTest {
         Tag t2;
         Group g1 = new Group(0, "name", "description");
         Group g2;
+        List<Tag> tags = Arrays.asList(t1,t2);
+        List<Group> groups = Arrays.asList(g1,g2);
+
 
         List<Tag> xavierTags = Arrays.asList(
             new Tag("IT"),
