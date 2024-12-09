@@ -11,6 +11,9 @@ public class RedbirdConnectTest {
 
     public DatabaseHandler dbHandler;
     public StudentController studentController;
+    public StudentHandler studentHandler;
+    public GroupHandler groupHandler;
+    public MySQLHandler sqlHandler;
     public Tag t1, t2;
     public Group g1, g2;
     public List<Tag> tags;
@@ -18,6 +21,9 @@ public class RedbirdConnectTest {
 
     @Before
     public void init() {
+        this.studentHandler = StudentHandler.getInstance();
+        this.groupHandler = new GroupHandler(dbHandler);
+        this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
         t1 = new Tag(0, "IT", "information technology");
         t2 = new Tag(1,"OffCampus","off-campus housing");
         g1 = new Group(0, "IT326", "project class");
