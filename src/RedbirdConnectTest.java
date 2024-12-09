@@ -21,6 +21,20 @@ public class RedbirdConnectTest {
 
     @Before
     public void init() {
+        Database database = DatabaseFactory.getDatabase(
+                DatabaseFactory.DatabaseType.MYSQL,
+                "StudentDB");
+        this.dbHandler = new DatabaseHandler(database);
+
+        try {
+            database.connect();
+            System.out.println("Successfully connected to database.");
+        } catch (RuntimeException e) {
+            System.err.println("Failed to connect to database: " + e.getMessage());
+            System.err.println("Please check your database configuration and try again.");
+            System.exit(1); // Exit if we can't connect to the database
+        }
+
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
         this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
@@ -90,6 +104,27 @@ public class RedbirdConnectTest {
     @Test
     public void loginFail() {
         assertFalse(studentController.loginStudent(10));
+    }
+
+    @Test
+    public void leaveGroupSuccess() {
+        List<Post> xavierPosts = new ArrayList<>();
+
+        g1 = new Group(1, "IT326", "project class");
+
+        groups = Arrays.asList(g1);
+
+        Student xavier = new Student(
+            1,
+            "xzamora@ilstu.edu",
+            "Xavier Zamora",
+            "Senior",
+            tags,
+            groups,
+            xavierPosts
+        );
+
+        assertTrue(dbHandler.leaveGroup(g1, xavier));
     }
     // Cleanup for gc
     @After
