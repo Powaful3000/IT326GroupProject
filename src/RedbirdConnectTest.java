@@ -11,7 +11,7 @@ public class RedbirdConnectTest {
     public void init() {
         Tag t1 = new Tag(0, "name", "description");
         Tag t2;
-        Group g1 = new Group(0, "name","description");
+        Group g1 = new Group(0, "name", "description");
         Group g2;
 
         List<Tag> xavierTags = Arrays.asList(
@@ -36,5 +36,11 @@ public class RedbirdConnectTest {
     }
 
     @Test
-    public void testingAccountExistsWhenRegistering() {}
+    public void testingAccountExistsWhenRegistering() {
+        if (dbHandler.addStudent(testStudent, "password")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
