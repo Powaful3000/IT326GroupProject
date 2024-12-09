@@ -273,4 +273,38 @@ public class StudentController {
         }
         return false;
     }
+
+    public boolean addTagToStudent(Tag tag) {
+        Student currentStudent = studentHandler.getCurrentStudent();
+        if (currentStudent == null) {
+            System.err.println("No student currently logged in");
+            return false;
+        }
+
+        // First try to add tag to database
+        if (dbHandler.addTagToStudent(currentStudent.getID(), tag.getID())) {
+            // If successful in database, update in-memory
+            currentStudent.addTag(tag);
+            System.out.println("Successfully added tag: " + tag.getName());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeTagFromStudent(Tag tag) {
+        Student currentStudent = studentHandler.getCurrentStudent();
+        if (currentStudent == null) {
+            System.err.println("No student currently logged in");
+            return false;
+        }
+
+        // First try to remove tag from database
+        if (dbHandler.removeTagFromStudent(currentStudent.getID(), tag.getID())) {
+            // If successful in database, update in-memory
+            currentStudent.removeTag(tag);
+            System.out.println("Successfully removed tag: " + tag.getName());
+            return true;
+        }
+        return false;
+    }
 }

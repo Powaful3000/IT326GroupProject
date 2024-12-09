@@ -140,7 +140,7 @@ public class TerminalUI {
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
         this.postHandler = new PostHandler();
-        this.tagHandler = new TagHandler();
+        this.tagHandler = new TagHandler(dbHandler);
         this.isRunning = true;
 
         // Add shutdown hook for cleanup

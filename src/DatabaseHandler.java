@@ -274,4 +274,24 @@ public class DatabaseHandler extends Database implements DatabaseOperations {
     public List<Student> getAllStudents() {
         return sqlHandler.getAllStudents();
     }
+
+    public List<Tag> getAllTags() {
+        return sqlHandler.getAllTags();
+    }
+
+    public boolean updateTag(Tag tag) {
+        return sqlHandler.updateTag(tag);
+    }
+
+    public boolean removeTag(Tag tag) {
+        return sqlHandler.removeTag(tag);
+    }
+
+    public List<Integer> getStudentTagIds(int studentId) {
+        return sqlHandler.getStudentTagIds(studentId);
+    }
+
+    public boolean addTag(Tag tag) {
+        return sqlHandler.addTag(tag);
+    }
 }

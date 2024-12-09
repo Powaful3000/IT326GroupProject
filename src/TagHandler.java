@@ -8,12 +8,18 @@ public class TagHandler {
     private DatabaseHandler dbHandler;
 
     // Constructor
-    public TagHandler() {
+    public TagHandler(DatabaseHandler dbHandler) {
+        this.dbHandler = dbHandler;
         this.tags = new ArrayList<>();
+        loadTagsFromDatabase();
     }
 
-    public void setDatabaseHandler(DatabaseHandler dbHandler) {
-        this.dbHandler = dbHandler;
+    private void loadTagsFromDatabase() {
+        List<Tag> dbTags = dbHandler.getAllTags();
+        if (dbTags != null) {
+            tags.clear();
+            tags.addAll(dbTags);
+        }
     }
 
     // Add a new tag
@@ -26,9 +32,15 @@ public class TagHandler {
             System.err.println("Tag with name " + tag.getName() + " already exists.");
             return false;
         }
-        tags.add(tag);
-        System.out.println("Tag added: " + tag.getName());
-        return true;
+
+        // First add to database
+        if (dbHandler.addTag(tag)) {
+            // If successful in database, add to in-memory list
+            tags.add(tag);
+            System.out.println("Tag added: " + tag.getName());
+            return true;
+        }
+        return false;
     }
 
     // Update a tag
@@ -42,10 +54,16 @@ public class TagHandler {
             System.err.println("Tag with ID " + tag.getID() + " not found.");
             return false;
         }
-        existingTag.setName(tag.getName());
-        existingTag.setDescription(tag.getDescription());
-        System.out.println("Tag updated: " + tag.getName());
-        return true;
+
+        // First update in database
+        if (dbHandler.updateTag(tag)) {
+            // If successful in database, update in-memory
+            existingTag.setName(tag.getName());
+            existingTag.setDescription(tag.getDescription());
+            System.out.println("Tag updated: " + tag.getName());
+            return true;
+        }
+        return false;
     }
 
     // Remove a tag
@@ -54,13 +72,17 @@ public class TagHandler {
             System.err.println("Cannot remove null tag.");
             return false;
         }
-        boolean removed = tags.remove(tag);
-        if (removed) {
-            System.out.println("Tag removed: " + tag.getName());
-        } else {
-            System.err.println("Failed to remove tag: Tag not found");
+
+        // First remove from database
+        if (dbHandler.removeTag(tag)) {
+            // If successful in database, remove from in-memory list
+            boolean removed = tags.remove(tag);
+            if (removed) {
+                System.out.println("Tag removed: " + tag.getName());
+            }
+            return removed;
         }
-        return removed;
+        return false;
     }
 
     // Retrieve a tag by ID
@@ -92,11 +114,11 @@ public class TagHandler {
     public List<Tag> getTagsByStudent(Student student) {
         List<Tag> studentTags = new ArrayList<>();
         if (student != null && dbHandler != null) {
-            // Get tags from database based on student ID
-            // This would typically involve a database query
-            for (Tag tag : tags) {
-                // Check if student has this tag in the database
-                if (dbHandler.containsTag(tag)) {
+            // Get student's tags from database
+            List<Integer> studentTagIds = dbHandler.getStudentTagIds(student.getID());
+            for (Integer tagId : studentTagIds) {
+                Tag tag = getTagById(tagId);
+                if (tag != null) {
                     studentTags.add(tag);
                 }
             }

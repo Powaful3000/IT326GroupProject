@@ -151,6 +151,11 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     private static final String SQL_ADD_FRIENDSHIP = "INSERT INTO friends (userID1, userID2) VALUES (?, ?)";
 
+    private static final String SQL_GET_ALL_TAGS = "SELECT * FROM " + TABLE_TAGS;
+    private static final String SQL_UPDATE_TAG = "UPDATE " + TABLE_TAGS + " SET name = ?, description = ? WHERE tagID = ?";
+    private static final String SQL_REMOVE_TAG = "DELETE FROM " + TABLE_TAGS + " WHERE tagID = ?";
+    private static final String SQL_GET_STUDENT_TAG_IDS = "SELECT tagID FROM " + TABLE_STUDENT_TAGS + " WHERE studentID = ?";
+
     // Constructor
     public MySQLHandler(String dbName) {
         super(dbName);
@@ -1234,6 +1239,56 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         } catch (SQLException e) {
             return false;
         }
+    }
+
+    public List<Tag> getAllTags() {
+        return executeQuery(
+            SQL_GET_ALL_TAGS,
+            stmt -> {},
+            rs -> {
+                List<Tag> tags = new ArrayList<>();
+                while (rs.next()) {
+                    tags.add(new Tag(
+                        rs.getInt("tagID"),
+                        rs.getString("name"),
+                        rs.getString("description")
+                    ));
+                }
+                return tags;
+            }
+        );
+    }
+
+    public boolean updateTag(Tag tag) {
+        return executeUpdate(
+            SQL_UPDATE_TAG,
+            stmt -> {
+                stmt.setString(1, tag.getName());
+                stmt.setString(2, tag.getDescription());
+                stmt.setInt(3, tag.getID());
+            }
+        );
+    }
+
+    public boolean removeTag(Tag tag) {
+        return executeUpdate(
+            SQL_REMOVE_TAG,
+            stmt -> stmt.setInt(1, tag.getID())
+        );
+    }
+
+    public List<Integer> getStudentTagIds(int studentId) {
+        return executeQuery(
+            SQL_GET_STUDENT_TAG_IDS,
+            stmt -> stmt.setInt(1, studentId),
+            rs -> {
+                List<Integer> tagIds = new ArrayList<>();
+                while (rs.next()) {
+                    tagIds.add(rs.getInt("tagID"));
+                }
+                return tagIds;
+            }
+        );
     }
 
 }
