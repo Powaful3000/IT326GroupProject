@@ -24,10 +24,10 @@ public class RedbirdConnectTest {
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
         this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
-        t1 = new Tag(0, "IT", "information technology");
-        t2 = new Tag(1,"OffCampus","off-campus housing");
-        g1 = new Group(0, "IT326", "project class");
-        g2 = new Group(1, "IT355", "security"); 
+        t1 = new Tag(1, "IT", "information technology");
+        t2 = new Tag(2,"OffCampus","off-campus housing");
+        g1 = new Group(1, "IT326", "project class");
+        g2 = new Group(2, "IT355", "security"); 
 
         tags = Arrays.asList(t1,t2);
         groups = Arrays.asList(g1,g2);
@@ -35,7 +35,7 @@ public class RedbirdConnectTest {
         List<Post> xavierPosts = new ArrayList<>();
 
         Student xavier = new Student(
-            0,
+            1,
             "xzamora@ilstu.edu",
             "Xavier Zamora",
             "Senior",
@@ -48,7 +48,7 @@ public class RedbirdConnectTest {
     // passes on existing account attempting to be registered
     @Test
     public void testingAccountExistsWhenRegistering() {
-        assertFalse(studentController.registerStudent("Xavier Zamora", "Senior", 0));
+        assertFalse(studentController.registerStudent("Xavier Zamora", "Senior", 1));
     }
 
     // passes on new account successfully registering
@@ -57,8 +57,8 @@ public class RedbirdConnectTest {
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
         this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
-        t1 = new Tag(0, "IT", "information technology");
-        g1 = new Group(0, "IT328", "computation theory");
+        t1 = new Tag(1, "IT", "information technology");
+        g1 = new Group(1, "IT328", "computation theory");
 
         tags = Arrays.asList(t1);
         groups = Arrays.asList(g1);
@@ -66,7 +66,7 @@ public class RedbirdConnectTest {
         List<Post> posts = new ArrayList<>();
 
         Student testStudent = new Student(
-            1,
+            2,
             "bob@ilstu.edu",
             "Bob bob",
             "Junior",
@@ -75,13 +75,13 @@ public class RedbirdConnectTest {
             posts
         );
 
-        assertTrue(studentController.registerStudent("Bob bob", "Junior", 1));
+        assertTrue(studentController.registerStudent("Bob bob", "Junior", 2));
     }
 
     // this passes when false but shouldnt 
     @Test
     public void loginSuccess() {
-        assertFalse(studentController.loginStudent(0));
+        assertFalse(studentController.loginStudent(1));
     }
 
     // pass on failed login attempt
