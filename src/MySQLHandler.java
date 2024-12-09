@@ -29,13 +29,12 @@ public class MySQLHandler extends Database implements DatabaseOperations {
 
     // SQL Query Constants
     private static final String SQL_SELECT_STUDENT_BY_ID = "SELECT * FROM " + TABLE_STUDENTS + " WHERE userID = ?";
-    private static final String SQL_SELECT_STUDENT_BY_USERNAME = "SELECT * FROM " + TABLE_STUDENTS
-            + " WHERE userName = ?";
+    private static final String SQL_SELECT_STUDENT_BY_USERNAME = "SELECT * FROM students WHERE userName = ?";
     private static final String SQL_INSERT_STUDENT = "INSERT INTO students (userName, password, userYear) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_STUDENT = "DELETE FROM " + TABLE_STUDENTS + " WHERE userID = ?";
     private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS
             + " (postID, postContent, postOwner, isAnonymous) VALUES (?, ?, ?, ?)";
-    private static final String SQL_DELETE_POST = "DELETE FROM " + TABLE_POSTS + " WHERE postID = ?";
+    private static final String SQL_DELETE_POST = "DELETE FROM posts WHERE postID = ?";
     private static final String SQL_INSERT_GROUP = "INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) VALUES (?, ?, ?, DEFAULT, DEFAULT)";
     private static final String SQL_SELECT_GROUP_MEMBERS = "SELECT s.* FROM " + TABLE_STUDENTS + " s JOIN "
             + TABLE_MEMBERSHIPS +
@@ -160,6 +159,10 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_REMOVE_TAG = "DELETE FROM " + TABLE_TAGS + " WHERE tagID = ?";
     private static final String SQL_GET_STUDENT_TAG_IDS = "SELECT tagID FROM " + TABLE_STUDENT_TAGS + " WHERE studentID = ?";
 
+    private static final String SQL_GET_STUDENT_POSTS = "SELECT p.*, s.* FROM posts p JOIN students s ON p.postOwner = s.userID WHERE s.userID = ?";
+
+    private static final String SQL_REMOVE_ALL_FRIENDSHIPS = "DELETE FROM friends WHERE userID1 = ? OR userID2 = ?";
+
     // Constructor
     public MySQLHandler(String dbName) {
         super(dbName);
@@ -272,13 +275,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     }
 
     // Method to remove a post from the database
-    public void removePost(Post post) {
-        executeUpdate(
-                SQL_DELETE_POST,
-                stmt -> {
-                    stmt.setInt(1, post.getID());
-                    System.out.println("Post removed: " + post.getContent());
-                });
+    public boolean removePost(int postId) {
+        return executeUpdate(
+            SQL_DELETE_POST,
+            stmt -> {
+                stmt.setInt(1, postId);
+                System.out.println("Removing post with ID: " + postId);
+            });
     }
 
     // Method to check if a student exists in the database
@@ -503,41 +506,22 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     @Override
     public Student getStudentByUsername(String username) {
         return executeQuery(
-                SQL_SELECT_STUDENT_BY_USERNAME,
-                stmt -> stmt.setString(1, username),
-                rs -> {
-                    if (rs.next()) {
-                        // First create the student
-                        Student student = new Student(
-                                rs.getInt("userID"),
-                                rs.getString("email"),
-                                rs.getString("userName"),
-                                rs.getString("userYear"),
-                                new ArrayList<>(),
-                                new ArrayList<>(),
-                                new ArrayList<>());
-
-                        // Then load their tags
-                        executeQuery(
-                            SQL_GET_STUDENT_TAGS,
-                            tagStmt -> tagStmt.setInt(1, student.getID()),
-                            tagRs -> {
-                                while (tagRs.next()) {
-                                    Tag tag = new Tag(
-                                        tagRs.getInt("tagID"),
-                                        tagRs.getString("name"),
-                                        tagRs.getString("description")
-                                    );
-                                    student.addTag(tag);
-                                }
-                                return null;
-                            });
-                        
-                        return student;
-                    }
-                    System.out.println("No student found with username: " + username);
-                    return null;
-                });
+            SQL_SELECT_STUDENT_BY_USERNAME,
+            stmt -> stmt.setString(1, username),
+            rs -> {
+                if (rs.next()) {
+                    return new Student(
+                        rs.getInt("userID"),
+                        rs.getString("userName"),  // Use userName as both username and email
+                        rs.getString("userName"),  // Use userName as name
+                        rs.getString("userYear"),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                    );
+                }
+                return null;
+            });
     }
 
     @Override
@@ -1383,6 +1367,46 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 return tagIds;
             }
         );
+    }
+
+    public List<Post> getStudentPosts(int studentId) {
+        return executeQuery(
+            SQL_GET_STUDENT_POSTS,
+            stmt -> stmt.setInt(1, studentId),
+            rs -> {
+                List<Post> posts = new ArrayList<>();
+                while (rs.next()) {
+                    Student owner = new Student(
+                        rs.getInt("userID"),
+                        rs.getString("userName"),  // Use userName as both username and name
+                        rs.getString("userName"),  // Since email doesn't exist
+                        rs.getString("userYear"),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                    );
+                    
+                    Post post = new Post(
+                        rs.getInt("postID"),
+                        rs.getString("postContent"),
+                        owner,
+                        null  // Group will be loaded separately if needed
+                    );
+                    post.setAnonymous(rs.getBoolean("isAnonymous"));
+                    posts.add(post);
+                }
+                return posts;
+            });
+    }
+
+    public boolean removeAllFriendships(int userId) {
+        return executeUpdate(
+            SQL_REMOVE_ALL_FRIENDSHIPS,
+            stmt -> {
+                stmt.setInt(1, userId);
+                stmt.setInt(2, userId);
+                System.out.println("Removing all friendships for user: " + userId);
+            });
     }
 
 }

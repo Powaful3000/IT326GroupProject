@@ -10,6 +10,7 @@ public class StudentHandler {
 
     private static StudentHandler instance; // Add singleton pattern
     private DatabaseHandler dbHandler;
+    private TagHandler tagHandler;
 
     public static StudentHandler getInstance() {
         if (instance == null) {
@@ -23,6 +24,7 @@ public class StudentHandler {
         this.students = new ArrayList<>();
         Database database = DatabaseFactory.getDatabase(DatabaseFactory.DatabaseType.MYSQL, "StudentDB");
         this.dbHandler = new DatabaseHandler(database);
+        this.tagHandler = new TagHandler(dbHandler);
     }
 
     // Add a student
@@ -47,15 +49,49 @@ public class StudentHandler {
     }
 
     // Remove a student
-    public boolean removeStudent(int studentID) {
-        Student student = getStudentById(studentID);
-        if (student == null) {
-            System.err.println("Student with ID " + studentID + " not found.");
+    public boolean removeStudent(int id) {
+        // Validate input
+        if (!Validator.isValidId(id)) {
+            System.err.println("Removal failed: Invalid ID.");
             return false;
         }
-        students.remove(student);
-        System.out.println("Student removed: " + student.getName());
-        return true;
+
+        Student studentToRemove = getStudentById(id);
+        if (studentToRemove == null) {
+            System.err.println("Removal failed: Student not found.");
+            return false;
+        }
+
+        // Remove all tags from student
+        List<Tag> tags = tagHandler.getTagsByStudent(studentToRemove);
+        for (Tag tag : tags) {
+            dbHandler.removeTagFromStudent(id, tag.getID());
+        }
+
+        // Leave all groups
+        List<Group> groups = studentToRemove.getGroups();
+        for (Group group : groups) {
+            dbHandler.leaveGroup(id, group.getID());
+        }
+
+        // Delete all posts by this student
+        List<Post> posts = dbHandler.getStudentPosts(id);
+        for (Post post : posts) {
+            dbHandler.removePost(post.getID());
+        }
+
+        // Remove all friend relationships
+        dbHandler.removeAllFriendships(id);
+
+        // Finally remove the student
+        boolean success = dbHandler.removeStudent(id);
+
+        if (success) {
+            System.out.println("Student removed successfully: ID " + id);
+        } else {
+            System.err.println("Removal failed: Unable to remove the student.");
+        }
+        return success;
     }
 
     // Update a student's information
