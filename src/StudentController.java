@@ -4,15 +4,12 @@ import java.util.ArrayList;
 
 public class StudentController {
 
-    private final StudentHandler studentHandler;
-    private final GroupHandler groupHandler;
-    private final MySQLHandler dbHandler;
+    private StudentHandler studentHandler;
+    private GroupHandler groupHandler;
+    private DatabaseHandler dbHandler;
 
     // Constructor
-    public StudentController(StudentHandler studentHandler, GroupHandler groupHandler, MySQLHandler dbHandler) {
-        if (studentHandler == null) {
-            throw new IllegalArgumentException("StudentHandler cannot be null");
-        }
+    public StudentController(StudentHandler studentHandler, GroupHandler groupHandler, DatabaseHandler dbHandler) {
         this.studentHandler = studentHandler;
         this.groupHandler = groupHandler;
         this.dbHandler = dbHandler;
@@ -20,58 +17,16 @@ public class StudentController {
 
     // Register a new student
     public boolean registerStudent(String name, String year, int id) {
-        // Validate inputs
-        if (!Validator.isValidString(name)) {
-            System.err.println("Registration failed: Invalid name.");
-            return false;
-        }
-        if (!Validator.isValidYear(year)) {
-            System.err.println("Registration failed: Invalid year.");
-            return false;
-        }
-        if (!Validator.isValidId(id)) {
-            System.err.println("Registration failed: Invalid ID.");
-            return false;
-        }
-
-        // Check if the student already exists
         if (studentHandler.getStudentById(id) != null) {
-            System.err.println("Registration failed: Student with ID " + id + " already exists.");
             return false;
         }
-
-        // Create and add the student
-        Student newStudent = new Student(id, null, name, year,
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        boolean success = studentHandler.addStudent(newStudent);
-
-        if (success) {
-            System.out.println("Student registered successfully: " + name);
-        } else {
-            System.err.println("Registration failed: Unable to add the student.");
-        }
-        return success;
+        Student newStudent = new Student(id, null, name, year, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+        return studentHandler.addStudent(newStudent);
     }
 
     // Login a student
     public boolean loginStudent(int id) {
-        // Validate input
-        if (!Validator.isValidId(id)) {
-            System.err.println("Login failed: Invalid ID.");
-            return false;
-        }
-
-        // Check if the student exists
-        Student student = studentHandler.getStudentById(id);
-        if (student == null) {
-            System.err.println("Login failed: Student with ID " + id + " does not exist.");
-            return false;
-        }
-
-        // Set the current student
-        studentHandler.setCurrentStudent(student);
-        System.out.println("Login successful for student: " + student.getName());
-        return true;
+        return studentHandler.getStudentById(id) != null;
     }
 
     // Update a student's information
@@ -99,21 +54,7 @@ public class StudentController {
 
     // Remove a student
     public boolean removeStudent(int id) {
-        // Validate input
-        if (!Validator.isValidId(id)) {
-            System.err.println("Removal failed: Invalid ID.");
-            return false;
-        }
-
-        // Remove the student using StudentHandler
-        boolean success = studentHandler.removeStudent(id);
-
-        if (success) {
-            System.out.println("Student removed successfully: ID " + id);
-        } else {
-            System.err.println("Removal failed: Unable to remove the student.");
-        }
-        return success;
+        return studentHandler.removeStudent(id);
     }
 
     // Print all students

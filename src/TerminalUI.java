@@ -115,6 +115,8 @@ public class TerminalUI {
     private final GroupHandler groupHandler;
     private final PostHandler postHandler;
     private final TagHandler tagHandler;
+    private final ProfileHandler profileHandler;
+    private final StudentController studentController;
     private Student currentUser;
     private boolean isRunning;
     private final DatabaseHandler dbHandler;
@@ -141,6 +143,8 @@ public class TerminalUI {
         this.groupHandler = new GroupHandler(dbHandler);
         this.postHandler = new PostHandler();
         this.tagHandler = new TagHandler(dbHandler);
+        this.profileHandler = new ProfileHandler(dbHandler);
+        this.studentController = new StudentController(studentHandler, groupHandler, dbHandler);
         this.isRunning = true;
 
         // Add shutdown hook for cleanup
@@ -283,29 +287,39 @@ public class TerminalUI {
     }
 
     private void showProfileMenu() {
-        System.out.println("\nMy Profile");
-        System.out.println("------------------------");
-        List<Tag> currentTags = tagHandler.getTagsByStudent(currentUser);
-        System.out.println("Current Tags: " + currentTags);
-        System.out.println("\n1. View Profile Details");
-        System.out.println("2. View Friends List");
-        System.out.println("3. Edit Profile");
-        System.out.println("4. Create New Tag");
-        System.out.println("5. Add Existing Tag");
-        System.out.println("6. Remove Tag");
-        System.out.println("7. Enable/Disable Anonymous Mode");
-        System.out.println("8. Back");
-
-        int choice = getIntInput(1, 8);
-        switch (choice) {
-            case 1 -> viewProfileDetails();
-            case 2 -> getFriends();
-            case 3 -> editProfile();
-            case 4 -> createTag();
-            case 5 -> addExistingTag();
-            case 6 -> removeTag();
-            case 7 -> toggleAnonymousMode();
-            case 8 -> {} // Return to main menu
+        while (true) {
+            System.out.println("\nProfile Menu");
+            System.out.println("------------------------");
+            System.out.println("1. View my profile");
+            System.out.println("2. Edit profile");
+            System.out.println("3. Add tag");
+            System.out.println("4. Remove tag");
+            System.out.println("5. Delete account");
+            System.out.println("6. Back");
+            
+            int choice = getIntInput(1, 6);
+            
+            switch (choice) {
+                case 1:
+                    viewProfile();
+                    break;
+                case 2:
+                    editProfile();
+                    break;
+                case 3:
+                    createTag();
+                    break;
+                case 4:
+                    removeTag();
+                    break;
+                case 5:
+                    if (deleteAccount()) {
+                        return; // Exit to main menu if account deleted
+                    }
+                    break;
+                case 6:
+                    return;
+            }
         }
     }
 
@@ -545,13 +559,13 @@ public class TerminalUI {
         System.out.println("\n1. Change my email");
         System.out.println("2. Change my name");
         System.out.println("3. Change my year");
-        System.out.println("5. Back");
+        System.out.println("4. Back");
         int choice = getIntInput(1, 4);
         switch (choice) {
             case 1 -> changeEmail();
             case 2 -> changeName();
             case 3 -> changeYear();
-            case 5 -> {
+            case 4 -> {
             } // Return to main menu
         }
     }
@@ -575,32 +589,27 @@ public class TerminalUI {
     }
 
     private void createTag() {
-        System.out.print("Enter new tag name: ");
+        System.out.println("\nAdd a Tag");
+        System.out.println("------------------------");
+        System.out.print("Enter tag name: ");
         String name = scanner.nextLine();
         System.out.print("Enter tag description: ");
-        String desc = scanner.nextLine();
-        
-        // Create new tag with auto-generated ID
-        Tag newTag = new Tag(name, desc);
-        
-        try {
-            if (tagHandler.addTag(newTag)) {
-                System.out.println("Tag created successfully!");
-                System.out.print("Would you like to add this tag to your profile? (y/n): ");
-                String answer = scanner.nextLine().trim().toLowerCase();
-                if (answer.equals("y")) {
-                    if (studentHandler.addTagToStudent(currentUser.getID(), newTag)) {
-                        System.out.println("Tag added to your profile!");
-                    } else {
-                        System.out.println("Failed to add tag to your profile.");
-                    }
-                }
+        String description = scanner.nextLine();
+
+        Tag newTag = new Tag(name, description);
+        if (dbHandler.containsTag(newTag)) {
+            if (dbHandler.addTagToStudent(currentUser.getID(), newTag.getID())) {
+                currentUser.addTag(newTag);
+                System.out.println("Tag added successfully!");
             } else {
-                System.out.println("Failed to create tag.");
+                System.out.println("Failed to add tag.");
             }
-        } catch (Exception e) {
-            System.out.println("Error creating tag: " + e.getMessage());
+        } else {
+            System.out.println("Tag does not exist in the system.");
         }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private void addExistingTag() {
@@ -1202,5 +1211,63 @@ public class TerminalUI {
         } else {
             System.out.println("Failed to toggle anonymous mode");
         }
+    }
+
+    private boolean deleteAccount() {
+        System.out.println("\nWARNING: This action cannot be undone!");
+        System.out.print("Enter your password to confirm account deletion: ");
+        String password = scanner.nextLine();
+        
+        try {
+            // Verify password before deletion
+            if (dbHandler.authenticateStudent(currentUser.getName(), password) != null) {
+                if (studentController.removeStudent(currentUser.getID())) {
+                    System.out.println("Account deleted successfully.");
+                    currentUser = null; // Clear current user
+                    return true;
+                } else {
+                    System.out.println("Failed to delete account.");
+                }
+            } else {
+                System.out.println("Incorrect password. Account deletion cancelled.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error deleting account: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private void viewProfile() {
+        System.out.println("\nProfile Information");
+        System.out.println("------------------------");
+        System.out.println("Name: " + currentUser.getName());
+        System.out.println("Email: " + currentUser.getEmail());
+        System.out.println("Year: " + currentUser.getYear());
+        System.out.println("Anonymous Mode: " + (currentUser.isAnonymous() ? "Enabled" : "Disabled"));
+        
+        // Display tags
+        System.out.println("\nInterests/Tags:");
+        List<Tag> tags = currentUser.getTags();
+        if (tags.isEmpty()) {
+            System.out.println("No tags added yet.");
+        } else {
+            for (Tag tag : tags) {
+                System.out.println("- " + tag.getName());
+            }
+        }
+
+        // Display recent activity
+        System.out.println("\nRecent Activity:");
+        List<Activity> activities = profileHandler.getProfileActivity(currentUser.getID());
+        if (activities.isEmpty()) {
+            System.out.println("No recent activity.");
+        } else {
+            for (Activity activity : activities) {
+                System.out.println("- " + activity.getDescription() + " (" + activity.getTimestamp() + ")");
+            }
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }
