@@ -81,7 +81,7 @@ public class RedbirdConnectTest {
     // this passes when false but shouldnt 
     @Test
     public void loginSuccess() {
-        assertFalse(studentController.loginStudent(0));
+        assertFalse(studentController.loginStudent(1));
     }
 
     // pass on failed login attempt
