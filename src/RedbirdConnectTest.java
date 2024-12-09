@@ -18,23 +18,14 @@ public class RedbirdConnectTest {
 
     @Before
     public void init() {
-        t1 = new Tag(0, "name", "description");
-        t2 = new Tag(1,"name2","desc2");
-        g1 = new Group(0, "name", "description");
-        g2 = new Group(1, "name2", "description2"); 
+        t1 = new Tag(0, "IT", "information technology");
+        t2 = new Tag(1,"OffCampus","off-campus housing");
+        g1 = new Group(0, "IT326", "project class");
+        g2 = new Group(1, "IT355", "security"); 
 
         tags = Arrays.asList(t1,t2);
         groups = Arrays.asList(g1,g2);
 
-
-        List<Tag> xavierTags = Arrays.asList(
-            new Tag("IT"),
-            new Tag("OffCampus")
-        );
-        List<Group> xavierGroups = Arrays.asList(
-            new Group("IT326"),
-            new Group("IT355")
-        );
         List<Post> xavierPosts = new ArrayList<>();
 
         Student testStudent = new Student(
@@ -42,8 +33,8 @@ public class RedbirdConnectTest {
             "xzamora@ilstu.edu",
             "Xavier Zamora",
             "Senior",
-            xavierTags,
-            xavierGroups,
+            tags,
+            groups,
             xavierPosts
         );
     }
