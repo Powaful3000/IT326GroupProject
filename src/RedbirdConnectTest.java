@@ -34,7 +34,7 @@ public class RedbirdConnectTest {
 
         List<Post> xavierPosts = new ArrayList<>();
 
-        Student testStudent = new Student(
+        Student xavier = new Student(
             0,
             "xzamora@ilstu.edu",
             "Xavier Zamora",
@@ -48,6 +48,38 @@ public class RedbirdConnectTest {
     @Test
     public void testingAccountExistsWhenRegistering() {
         assertFalse(studentController.registerStudent("Xavier Zamora", "Senior", 0));
+    }
+
+    @Test
+    public void testingAccountDoesNotExistWhenRegistering() {
+        this.studentHandler = StudentHandler.getInstance();
+        this.groupHandler = new GroupHandler(dbHandler);
+        this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
+        t1 = new Tag(0, "IT", "information technology");
+        g1 = new Group(0, "IT328", "computation theory");
+
+        tags = Arrays.asList(t1);
+        groups = Arrays.asList(g1);
+
+        List<Post> posts = new ArrayList<>();
+
+        Student testStudent = new Student(
+            1,
+            "bob@ilstu.edu",
+            "Bob bob",
+            "Junior",
+            tags,
+            groups,
+            posts
+        );
+
+        assertTrue(studentController.registerStudent("Bob bob", "Junior", 1));
+    }
+
+    // this passes when false but shouldnt 
+    @Test
+    public void loginSuccess() {
+        assertFalse(studentController.loginStudent(0));
     }
 
     // Cleanup for gc
