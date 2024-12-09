@@ -124,8 +124,30 @@ public class RedbirdConnectTest {
             xavierPosts
         );
 
-        assertFalse(dbHandler.leaveGroup(g1, jon));
+        assertTrue(dbHandler.leaveGroup(g1, jon));
     }
+
+    @Test
+    public void leaveGroupFail() {
+        List<Post> xavierPosts = new ArrayList<>();
+
+        g1 = new Group(11, "COM223", "project group");
+
+        groups = Arrays.asList(g1);
+
+        Student bri = new Student(
+            8,
+            "bri@ilstu.edu",
+            "bri",
+            "Sophomore",
+            tags,
+            groups,
+            xavierPosts
+        );
+
+        assertFalse(dbHandler.leaveGroup(g1, bri));
+    }
+
     // Cleanup for gc
     @After
     public void cleanUp() {
