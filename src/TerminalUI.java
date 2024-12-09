@@ -265,14 +265,15 @@ public class TerminalUI {
         System.out.println("5. Logout");
         System.out.println("\nPlease select an option:");
 
-        String input = scanner.nextLine();
-        if (input.equals("debug") || input.equals("0")) {
-            showDebugMenu();
-            return;
-        }
+        // String input = scanner.nextLine();
+        // if (input.equals("debug") || input.equals("0")) {
+        //     showDebugMenu();
+        //     return;
+        // }
 
-        int choice = getIntInput(1, 5);
+        int choice = getIntInput(0, 5);
         switch (choice) {
+            case 0 -> showDebugMenu();
             case 1 -> showProfileMenu();
             case 2 -> showGroupsMenu();
             case 3 -> showFriendsMenu();
