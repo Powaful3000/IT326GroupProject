@@ -114,17 +114,17 @@ public class RedbirdConnectTest {
 
         groups = Arrays.asList(g1);
 
-        Student xavier = new Student(
-            1,
-            "xzamora@ilstu.edu",
-            "Xavier Zamora",
-            "Senior",
+        Student jon = new Student(
+            3,
+            "Jon@ilstu.edu",
+            "Jon Jon",
+            "Freshman",
             tags,
             groups,
             xavierPosts
         );
 
-        assertTrue(dbHandler.leaveGroup(g1, xavier));
+        assertFalse(dbHandler.leaveGroup(g1, jon));
     }
     // Cleanup for gc
     @After
