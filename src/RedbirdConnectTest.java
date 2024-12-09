@@ -1,11 +1,14 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.Assert.*;
 
 public class RedbirdConnectTest {
 
-    private final DatabaseHandler dbHandler;
+    public DatabaseHandler dbHandler;
+    public StudentController studentController;
 
     @Before
     public void init() {
@@ -37,10 +40,6 @@ public class RedbirdConnectTest {
 
     @Test
     public void testingAccountExistsWhenRegistering() {
-        if (dbHandler.addStudent(testStudent, "password")) {
-            return true;
-        } else {
-            return false;
-        }
+        assertFalse(studentController.registerStudent("Xavier Zamora", "Senior", 0));
     }
 }
