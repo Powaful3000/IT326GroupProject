@@ -37,7 +37,7 @@ public class RedbirdConnectTest {
 
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
-        this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
+        this.studentController = new StudentController(studentHandler, groupHandler, dbHandler);
         t1 = new Tag(1, "IT", "information technology");
         t2 = new Tag(2,"OffCampus","off-campus housing");
         g1 = new Group(1, "IT326", "project class");
@@ -72,7 +72,7 @@ public class RedbirdConnectTest {
     public void testingAccountDoesNotExistWhenRegistering() {
         this.studentHandler = StudentHandler.getInstance();
         this.groupHandler = new GroupHandler(dbHandler);
-        this.studentController = new StudentController(studentHandler, groupHandler, sqlHandler);
+        this.studentController = new StudentController(studentHandler, groupHandler, dbHandler);
         t1 = new Tag(1, "IT", "information technology");
         g1 = new Group(1, "IT328", "computation theory");
 
