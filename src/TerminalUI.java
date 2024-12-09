@@ -707,12 +707,20 @@ public class TerminalUI {
 
         List<Post> posts = dbHandler.getGroupPosts(currentGroup.getID());
 
-        if (posts.isEmpty()) {
+        if (posts == null || posts.isEmpty()) {
             System.out.println("No posts in this group yet.");
         } else {
             for (Post post : posts) {
-                System.out.println(
-                        "\nPost by " + post.getOwner().getName() + ":");
+                Student owner = post.getOwner();
+                String authorName;
+                if (owner == null) {
+                    authorName = "Unknown User";
+                } else if (owner.isAnonymous()) {
+                    authorName = "Anonymous";
+                } else {
+                    authorName = owner.getName();
+                }
+                System.out.println("\nPost by " + authorName + ":");
                 System.out.println(post.getContent());
             }
         }

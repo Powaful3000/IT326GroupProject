@@ -33,8 +33,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             + " WHERE userName = ?";
     private static final String SQL_INSERT_STUDENT = "INSERT INTO students (userName, password, userYear) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_STUDENT = "DELETE FROM " + TABLE_STUDENTS + " WHERE userID = ?";
-    private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS
-            + " (postID, postContent, postOwner) VALUES (?, ?, ?)";
+    private static final String SQL_INSERT_POST = "INSERT INTO posts (postID, postContent, postOwner, isAnonymous) VALUES (?, ?, ?, ?)";
     private static final String SQL_DELETE_POST = "DELETE FROM " + TABLE_POSTS + " WHERE postID = ?";
     private static final String SQL_INSERT_GROUP = "INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) VALUES (?, ?, ?, DEFAULT, DEFAULT)";
     private static final String SQL_SELECT_GROUP_MEMBERS = "SELECT s.* FROM " + TABLE_STUDENTS + " s JOIN "
@@ -120,9 +119,13 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private static final String SQL_JOIN_GROUP = "INSERT INTO " + TABLE_MEMBERSHIPS
             + " (studentID, groupID, joinDate) VALUES (?, ?, CURRENT_TIMESTAMP)";
 
-    private static final String SQL_GET_GROUP_POSTS = "SELECT p.* FROM " + TABLE_POSTS + " p JOIN " + TABLE_POST_GROUPS
-            +
-            " pg ON p.postID = pg.postID WHERE pg.groupID = ? ORDER BY p.postDate DESC";
+    private static final String SQL_GET_GROUP_POSTS = 
+        "SELECT p.postID, p.postContent, p.postOwner, p.postDate, p.isAnonymous, " +
+        "s.userID as ownerID, s.userName, s.userYear " +
+        "FROM " + TABLE_POSTS + " p " +
+        "JOIN " + TABLE_STUDENTS + " s ON p.postOwner = s.userID " +
+        "JOIN " + TABLE_POST_GROUPS + " pg ON p.postID = pg.postID " +
+        "WHERE pg.groupID = ? ORDER BY p.postDate DESC";
 
     // Add with other SQL constants at the top
     private static final String SQL_FIND_GROUP_BY_NAME = "SELECT * FROM " + TABLE_GROUPS + " WHERE groupName = ?";
@@ -248,11 +251,11 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             post.setID(newId);
 
             // First insert the post
-            String query = "INSERT INTO posts (postID, postContent, postOwner) VALUES (?, ?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            try (PreparedStatement stmt = connection.prepareStatement(SQL_INSERT_POST)) {
                 stmt.setInt(1, post.getID());
                 stmt.setString(2, post.getContent());
                 stmt.setInt(3, post.getOwner().getID());
+                stmt.setBoolean(4, post.getOwner().isAnonymous());  // Store current anonymous status
                 stmt.executeUpdate();
 
                 // If post has a group, associate it with the group
@@ -893,12 +896,24 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     private List<Post> mapResultSetToPostList(ResultSet rs) throws SQLException {
         List<Post> posts = new ArrayList<>();
         while (rs.next()) {
-            posts.add(new Post(
-                    rs.getInt("postID"),
-                    rs.getString("postContent"),
-                    getStudentById(rs.getInt("postOwner")),
-                    null // Group will be loaded separately if needed
-            ));
+            Student owner = new Student(
+                rs.getInt("ownerID"),
+                rs.getString("userName"),
+                rs.getString("userName"),
+                rs.getString("userYear"),
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>()
+            );
+            owner.setAnonymous(rs.getBoolean("isAnonymous"));  // Use the post's anonymous status
+            
+            Post post = new Post(
+                rs.getInt("postID"),
+                rs.getString("postContent"),
+                owner,
+                null  // Group will be loaded separately if needed
+            );
+            posts.add(post);
         }
         return posts;
     }
