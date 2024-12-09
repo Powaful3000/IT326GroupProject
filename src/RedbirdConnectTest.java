@@ -45,11 +45,13 @@ public class RedbirdConnectTest {
         );
     }
 
+    // passes on existing account attempting to be registered
     @Test
     public void testingAccountExistsWhenRegistering() {
         assertFalse(studentController.registerStudent("Xavier Zamora", "Senior", 0));
     }
 
+    // passes on new account successfully registering
     @Test
     public void testingAccountDoesNotExistWhenRegistering() {
         this.studentHandler = StudentHandler.getInstance();
@@ -82,6 +84,11 @@ public class RedbirdConnectTest {
         assertFalse(studentController.loginStudent(0));
     }
 
+    // pass on failed login attempt
+    @Test
+    public void loginFail() {
+
+    }
     // Cleanup for gc
     @After
     public void cleanUp() {
