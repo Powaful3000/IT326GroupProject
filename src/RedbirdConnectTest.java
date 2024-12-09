@@ -136,7 +136,7 @@ public class RedbirdConnectTest {
         groups = Arrays.asList(g1);
 
         Student bri = new Student(
-            8,
+            4,
             "bri@ilstu.edu",
             "bri",
             "Sophomore",
