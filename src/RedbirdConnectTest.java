@@ -43,6 +43,8 @@ public class RedbirdConnectTest {
             groups,
             xavierPosts
         );
+
+        studentController.registerStudent("Xavier Zamora", "Senior", 1);
     }
 
     // passes on existing account attempting to be registered
