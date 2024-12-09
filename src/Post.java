@@ -5,6 +5,7 @@ public class Post {
     private String postContent;
     private Student postOwner;
     private Group postGroup;
+    private boolean isAnonymous;
 
     // Constructor
     public Post(int postID, String postContent, Student postOwner, Group postGroup) {
@@ -12,6 +13,7 @@ public class Post {
         this.postContent = postContent;
         this.postOwner = postOwner;
         this.postGroup = postGroup;
+        this.isAnonymous = false;
     }
 
     // Getters
@@ -31,6 +33,10 @@ public class Post {
         return postGroup;
     }
 
+    public boolean isAnonymous() {
+        return isAnonymous;
+    }
+
     // Setters
     public void setID(int postID) {
         this.postID = postID;
@@ -46,6 +52,10 @@ public class Post {
 
     public void setGroup(Group postGroup) {
         this.postGroup = postGroup;
+    }
+
+    public void setAnonymous(boolean isAnonymous) {
+        this.isAnonymous = isAnonymous;
     }
 
     // Method to check if the post belongs to a specific group

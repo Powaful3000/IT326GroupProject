@@ -64,10 +64,11 @@ CREATE TABLE
 -- Create the posts table - for student posts/messages
 CREATE TABLE
     posts (
-        postID INT PRIMARY KEY, -- Unique identifier for each post
+        postID INT PRIMARY KEY AUTO_INCREMENT, -- Unique identifier for each post
         postContent TEXT NOT NULL, -- The actual content of the post
         postOwner INT, -- Reference to the student who created it
         postDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- When the post was created
+        isAnonymous BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (postOwner) REFERENCES students (userID) ON DELETE CASCADE -- Posts are deleted when their owner is deleted
     );
 

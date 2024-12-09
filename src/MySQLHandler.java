@@ -33,7 +33,8 @@ public class MySQLHandler extends Database implements DatabaseOperations {
             + " WHERE userName = ?";
     private static final String SQL_INSERT_STUDENT = "INSERT INTO students (userName, password, userYear) VALUES (?, ?, ?)";
     private static final String SQL_DELETE_STUDENT = "DELETE FROM " + TABLE_STUDENTS + " WHERE userID = ?";
-    private static final String SQL_INSERT_POST = "INSERT INTO posts (postID, postContent, postOwner, isAnonymous) VALUES (?, ?, ?, ?)";
+    private static final String SQL_INSERT_POST = "INSERT INTO " + TABLE_POSTS
+            + " (postID, postContent, postOwner, isAnonymous) VALUES (?, ?, ?, ?)";
     private static final String SQL_DELETE_POST = "DELETE FROM " + TABLE_POSTS + " WHERE postID = ?";
     private static final String SQL_INSERT_GROUP = "INSERT INTO student_groups (groupID, groupName, groupDescription, groupSize, creationDate) VALUES (?, ?, ?, DEFAULT, DEFAULT)";
     private static final String SQL_SELECT_GROUP_MEMBERS = "SELECT s.* FROM " + TABLE_STUDENTS + " s JOIN "
@@ -255,7 +256,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 stmt.setInt(1, post.getID());
                 stmt.setString(2, post.getContent());
                 stmt.setInt(3, post.getOwner().getID());
-                stmt.setBoolean(4, post.getOwner().isAnonymous());  // Store current anonymous status
+                stmt.setBoolean(4, post.getOwner().isAnonymous());
                 stmt.executeUpdate();
 
                 // If post has a group, associate it with the group
@@ -898,14 +899,14 @@ public class MySQLHandler extends Database implements DatabaseOperations {
         while (rs.next()) {
             Student owner = new Student(
                 rs.getInt("ownerID"),
-                rs.getString("userName"),
-                rs.getString("userName"),
+                rs.getString("userName"),  // Use userName as both username and name
+                rs.getString("userName"),  // Since email doesn't exist
                 rs.getString("userYear"),
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>()
             );
-            owner.setAnonymous(rs.getBoolean("isAnonymous"));  // Use the post's anonymous status
+            owner.setAnonymous(rs.getBoolean("isAnonymous"));
             
             Post post = new Post(
                 rs.getInt("postID"),
@@ -913,6 +914,7 @@ public class MySQLHandler extends Database implements DatabaseOperations {
                 owner,
                 null  // Group will be loaded separately if needed
             );
+            post.setAnonymous(rs.getBoolean("isAnonymous"));
             posts.add(post);
         }
         return posts;
@@ -1031,21 +1033,34 @@ public class MySQLHandler extends Database implements DatabaseOperations {
     @Override
     public List<Post> getGroupPosts(int groupId) {
         return executeQuery(
-                SQL_GET_GROUP_POSTS,
-                stmt -> stmt.setInt(1, groupId),
-                rs -> {
-                    List<Post> posts = new ArrayList<>();
-                    while (rs.next()) {
-                        Student owner = getStudentById(rs.getInt("postOwner"));
-                        Post post = new Post(
-                                rs.getInt("postID"),
-                                rs.getString("postContent"),
-                                owner,
-                                getGroupByID(groupId));
-                        posts.add(post);
-                    }
-                    return posts;
-                });
+            SQL_GET_GROUP_POSTS,
+            stmt -> stmt.setInt(1, groupId),
+            rs -> {
+                List<Post> posts = new ArrayList<>();
+                Group group = getGroupByID(groupId);
+                while (rs.next()) {
+                    Student owner = new Student(
+                        rs.getInt("ownerID"),
+                        rs.getString("userName"),  // Use userName as both username and name
+                        rs.getString("userName"),  // Since email doesn't exist
+                        rs.getString("userYear"),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                    );
+                    owner.setAnonymous(rs.getBoolean("isAnonymous"));
+                    
+                    Post post = new Post(
+                        rs.getInt("postID"),
+                        rs.getString("postContent"),
+                        owner,
+                        group
+                    );
+                    post.setAnonymous(rs.getBoolean("isAnonymous"));
+                    posts.add(post);
+                }
+                return posts;
+            });
     }
 
     @Override
